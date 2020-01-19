@@ -2,6 +2,7 @@ package main.models;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 
 @Entity
@@ -30,6 +31,15 @@ public class Users {
     private String code;
 
     private String photo;
+
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "users")
+    private List<Posts> userPosts;
+
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "users")
+    private List<PostComments> userComments;
+
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "users")
+    private List <PostsVotes> userVotes;
 
     //====================================================================================================
 
@@ -95,5 +105,29 @@ public class Users {
 
     public void setPhoto(String photo) {
         this.photo = photo;
+    }
+
+    public List<Posts> getUserPosts() {
+        return userPosts;
+    }
+
+    public void setUserPosts(List<Posts> userPosts) {
+        this.userPosts = userPosts;
+    }
+
+    public List<PostComments> getUserComments() {
+        return userComments;
+    }
+
+    public void setUserComments(List<PostComments> userComments) {
+        this.userComments = userComments;
+    }
+
+    public List<PostsVotes> getUserVotes() {
+        return userVotes;
+    }
+
+    public void setUserVotes(List<PostsVotes> userVotes) {
+        this.userVotes = userVotes;
     }
 }

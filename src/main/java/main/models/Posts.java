@@ -3,6 +3,7 @@ package main.models;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table (name = "posts")
@@ -21,8 +22,14 @@ public class Posts {
     @Column(name = "moderator_id")
     private int moderatorId;
 
+    @ManyToOne (cascade = CascadeType.ALL)
+    @JoinColumn (name = "user_id")
+    private Users user;
+
+    /*
     @Column(name = "user_id", nullable = false)
     private int userId;
+    */
 
     @Column(nullable = false)
     private Date time;
@@ -36,6 +43,17 @@ public class Posts {
     @Column(name = "view_count", nullable = false)
     private int viewCount;
 
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "posts")
+    private List<PostComments> commentsToPost;
+
+    @ManyToMany (cascade = CascadeType.ALL)
+    @JoinTable (name = "tag2post",
+                joinColumns=@JoinColumn (name = "post_id"),
+                inverseJoinColumns = @JoinColumn (name = "tag_id"))
+    private List <Tags> tagsToPost;
+
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "posts")
+    private List <PostsVotes> votesToPost;
     //===================================================================================================
 
     public int getId() {
@@ -70,12 +88,12 @@ public class Posts {
         this.moderatorId = moderatorId;
     }
 
-    public int getUserId() {
-        return userId;
+    public Users getUser() {
+        return user;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public void setUser(Users user) {
+        this.user = user;
     }
 
     public Date getTime() {
@@ -109,4 +127,30 @@ public class Posts {
     public void setViewCount(int viewCount) {
         this.viewCount = viewCount;
     }
+
+    public List<PostComments> getCommentsToPost() {
+        return commentsToPost;
+    }
+
+    public void setCommentsToPost(List<PostComments> commentsToPost) {
+        this.commentsToPost = commentsToPost;
+    }
+
+    public List<Tags> getTagsToPost() {
+        return tagsToPost;
+    }
+
+    public void setTagsToPost(List<Tags> tagsToPost) {
+        this.tagsToPost = tagsToPost;
+    }
+
+    public List<PostsVotes> getVotesToPost() {
+        return votesToPost;
+    }
+
+    public void setVotesToPost(List<PostsVotes> votesToPost) {
+        this.votesToPost = votesToPost;
+    }
+
+
 }

@@ -24,6 +24,14 @@ public class PostsVotes {
     @Column(nullable = false)
     private boolean value;
 
+    @ManyToOne (cascade = CascadeType.ALL)
+    @JoinColumn (name = "post_id")
+    private Posts postForVote;
+
+    @ManyToOne (cascade = CascadeType.ALL)
+    @JoinColumn (name = "user_id")
+    private Users userForVote;
+
     //=================================================================================================
 
 
@@ -65,5 +73,21 @@ public class PostsVotes {
 
     public void setValue(boolean value) {
         this.value = value;
+    }
+
+    public Posts getPostForVote() {
+        return postForVote;
+    }
+
+    public void setPostForVote(Posts postForVote) {
+        this.postForVote = postForVote;
+    }
+
+    public Users getUserForVote() {
+        return userForVote;
+    }
+
+    public void setUserForVote(Users userForVote) {
+        this.userForVote = userForVote;
     }
 }

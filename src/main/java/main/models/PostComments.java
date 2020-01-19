@@ -23,6 +23,14 @@ public class PostComments {
     @Column (nullable = false)
     private Date time;
 
+    @ManyToOne (cascade = CascadeType.ALL)
+    @JoinColumn (name = "post_id")
+    private Posts postForComments;
+
+    @ManyToOne (cascade = CascadeType.ALL)
+    @JoinColumn (name = "user_id")
+    private Users userForComments;
+
     //==================================================================================================
 
     public int getId() {
@@ -63,5 +71,21 @@ public class PostComments {
 
     public void setTime(Date time) {
         this.time = time;
+    }
+
+    public Posts getPostForComments() {
+        return postForComments;
+    }
+
+    public void setPostForComments(Posts postForComments) {
+        this.postForComments = postForComments;
+    }
+
+    public Users getUserForComments() {
+        return userForComments;
+    }
+
+    public void setUserForComments(Users userForComments) {
+        this.userForComments = userForComments;
     }
 }

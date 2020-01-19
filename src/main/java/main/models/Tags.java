@@ -1,6 +1,7 @@
 package main.models;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table (name = "tags")
@@ -12,6 +13,12 @@ public class Tags {
 
     @Column(nullable = false)
     private String name;
+
+    @ManyToMany (cascade = CascadeType.ALL)
+    @JoinTable (name = "tag2post",
+            joinColumns=@JoinColumn (name = "tag_id"),
+            inverseJoinColumns = @JoinColumn (name = "post_id"))
+    private List<Posts> postsForTags;
 
     //===============================================================================================
 
@@ -29,5 +36,13 @@ public class Tags {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<Posts> getPostsForTags() {
+        return postsForTags;
+    }
+
+    public void setPostsForTags(List<Posts> postsForTags) {
+        this.postsForTags = postsForTags;
     }
 }
