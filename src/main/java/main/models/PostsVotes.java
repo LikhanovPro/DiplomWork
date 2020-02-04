@@ -25,11 +25,11 @@ public class PostsVotes {
     private boolean value;
 
     @ManyToOne (cascade = CascadeType.ALL)
-    @JoinColumn (name = "post_id")
+    @JoinColumn (name = "post_id", insertable = false, updatable = false)
     private Posts postForVote;
 
     @ManyToOne (cascade = CascadeType.ALL)
-    @JoinColumn (name = "user_id")
+    @JoinColumn (name = "user_id", insertable = false, updatable = false)
     private Users userForVote;
 
     //=================================================================================================

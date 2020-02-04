@@ -2,7 +2,9 @@ package main.models;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Entity
@@ -32,14 +34,15 @@ public class Users {
 
     private String photo;
 
-    @OneToMany (cascade = CascadeType.ALL, mappedBy = "users")
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "userId")
     private List<Posts> userPosts;
 
-    @OneToMany (cascade = CascadeType.ALL, mappedBy = "users")
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "userId")
     private List<PostComments> userComments;
 
-    @OneToMany (cascade = CascadeType.ALL, mappedBy = "users")
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "userId")
     private List <PostsVotes> userVotes;
+
 
     //====================================================================================================
 
@@ -130,4 +133,5 @@ public class Users {
     public void setUserVotes(List<PostsVotes> userVotes) {
         this.userVotes = userVotes;
     }
+
 }

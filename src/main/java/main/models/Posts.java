@@ -20,16 +20,14 @@ public class Posts {
     private ModeratorStatus moderationStatus;
 
     @Column(name = "moderator_id")
-    private int moderatorId;
+    private Integer moderatorId;
 
     @ManyToOne (cascade = CascadeType.ALL)
-    @JoinColumn (name = "user_id")
+    @JoinColumn (name = "user_id", insertable = false, updatable = false)
     private Users user;
 
-    /*
     @Column(name = "user_id", nullable = false)
     private int userId;
-    */
 
     @Column(nullable = false)
     private Date time;
@@ -41,9 +39,9 @@ public class Posts {
     private String text;
 
     @Column(name = "view_count", nullable = false)
-    private int viewCount;
+    private Integer viewCount;
 
-    @OneToMany (cascade = CascadeType.ALL, mappedBy = "posts")
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "postId")
     private List<PostComments> commentsToPost;
 
     @ManyToMany (cascade = CascadeType.ALL)
@@ -52,7 +50,7 @@ public class Posts {
                 inverseJoinColumns = @JoinColumn (name = "tag_id"))
     private List <Tags> tagsToPost;
 
-    @OneToMany (cascade = CascadeType.ALL, mappedBy = "posts")
+    @OneToMany (cascade = CascadeType.ALL, mappedBy = "postId")
     private List <PostsVotes> votesToPost;
     //===================================================================================================
 
@@ -80,11 +78,11 @@ public class Posts {
         this.moderationStatus = moderationStatus;
     }
 
-    public int getModeratorId() {
+    public Integer getModeratorId() {
         return moderatorId;
     }
 
-    public void setModeratorId(int moderatorId) {
+    public void setModeratorId(Integer moderatorId) {
         this.moderatorId = moderatorId;
     }
 
@@ -120,11 +118,11 @@ public class Posts {
         this.text = text;
     }
 
-    public int getViewCount() {
+    public Integer getViewCount() {
         return viewCount;
     }
 
-    public void setViewCount(int viewCount) {
+    public void setViewCount(Integer viewCount) {
         this.viewCount = viewCount;
     }
 
@@ -152,5 +150,11 @@ public class Posts {
         this.votesToPost = votesToPost;
     }
 
+    public int getUserId() {
+        return userId;
+    }
 
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
 }

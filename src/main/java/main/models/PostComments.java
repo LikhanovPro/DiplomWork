@@ -12,7 +12,7 @@ public class PostComments {
     private int id;
 
     @Column(name = "parent_id")
-    private int parentId;
+    private Integer parentId;
 
     @Column(name = "post_id", nullable = false)
     private int postId;
@@ -23,12 +23,15 @@ public class PostComments {
     @Column (nullable = false)
     private Date time;
 
+    @Column (name = "comment")
+    private String comment;
+
     @ManyToOne (cascade = CascadeType.ALL)
-    @JoinColumn (name = "post_id")
+    @JoinColumn (name = "post_id", insertable = false, updatable = false)
     private Posts postForComments;
 
     @ManyToOne (cascade = CascadeType.ALL)
-    @JoinColumn (name = "user_id")
+    @JoinColumn (name = "user_id", insertable = false, updatable = false)
     private Users userForComments;
 
     //==================================================================================================
@@ -87,5 +90,13 @@ public class PostComments {
 
     public void setUserForComments(Users userForComments) {
         this.userForComments = userForComments;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }
