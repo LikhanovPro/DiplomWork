@@ -17,17 +17,8 @@ public class GlobalSetting {
     private String name;
 
     @Column (nullable = false)
-    private String value;
+    private boolean value;
 
-    //========================================================================================
-
-
-    public GlobalSetting(int id, String code, String name, String value) {
-        this.id = id;
-        this.code = code;
-        this.name = name;
-        this.value = value;
-    }
 
     //========================================================================================
     public int getId() {
@@ -54,11 +45,11 @@ public class GlobalSetting {
         this.name = name;
     }
 
-    public String getValue() {
+    public boolean getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(boolean value) {
         this.value = value;
     }
 }

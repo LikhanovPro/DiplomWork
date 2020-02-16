@@ -109,11 +109,19 @@ public class MetodsForPostController {
 
     public static Map <Object, Object> createJsonForMyPosts(Posts post) {
         Map <Object, Object> mapForAnswer = new HashMap<>();
+        Map <Object, Object> userMap = new HashMap<>();
 
         mapForAnswer.put("id", post.getId());
         mapForAnswer.put("time", post.getTime().toString());
         mapForAnswer.put("title", post.getTitle());
         mapForAnswer.put("announce", "Не понял, что именно выводить");
+
+        //В описательной части API запросов задания нет требований к этой информации в ответе, но
+        // при анализе работы веб-страницы это необходимо для работы сайта
+        userMap.put("id", post.getUser().getId());
+        userMap.put("name", post.getUser().getName());
+        mapForAnswer.put("user", userMap);
+        //===================================================
         int likeCount = 0;
         int dislikeCounts = 0;
         for (int i = 0; i < post.getVotesToPost().size(); i++) {

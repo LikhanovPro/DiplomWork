@@ -2,6 +2,7 @@ package main.controller;
 
 import main.models.Posts;
 import main.models.PostsRepository;
+import main.models.PostsVotes;
 import main.models.TagsRepository;
 
 import java.text.ParseException;
@@ -84,6 +85,36 @@ public class MetodsForGeneralController {
         answerForJson.put("years", years);
         answerForJson.put("posts", postsMapForYears);
         return answerForJson;
-
     }
+
+    public static Map <Object, Object> postsStatistics (List <Posts> posts) {
+        Map <Object, Object> answerForJson = new HashMap<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        answerForJson.put("Постов", posts.size());
+        int likeCount = 0;
+        int dislikeCounts = 0;
+        int viewCounts = 0;
+        Date date = new Date();
+        for (Posts post : posts) {
+            viewCounts += post.getViewCount();
+            if (!date.before(post.getTime())) {
+                date = post.getTime();
+            }
+            for (PostsVotes votes : post.getVotesToPost()) {
+                if (votes.isValue()) {
+                    likeCount++;
+                }
+                else {
+                    dislikeCounts++;
+                }
+            }
+        }
+        answerForJson.put("Лайков", likeCount);
+        answerForJson.put("Дизлайков", dislikeCounts);
+        answerForJson.put("Просмотров", viewCounts);
+        answerForJson.put("Первая публикация", dateFormat.format(date));
+        return answerForJson;
+    }
+
+
 }
