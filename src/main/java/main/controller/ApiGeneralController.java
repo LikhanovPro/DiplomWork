@@ -208,8 +208,7 @@ public class ApiGeneralController {
         int idStatisticsIsPublic = 3;
 
         if (!globalSettingRepository.findById(idStatisticsIsPublic).get().getValue() && userId.equals(null)) {
-            //Вернуть ошибку 401 и пстой ответ
-            return "";
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
         else {
             List <Posts> posts = new ArrayList<>();
