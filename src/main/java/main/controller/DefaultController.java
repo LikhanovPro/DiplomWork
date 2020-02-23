@@ -34,27 +34,6 @@ public class DefaultController {
     @RequestMapping("/")
     public String index(Model model)
     {
-        /*Задаем глобальные настройки
-        String multiUserCode = "MULTIUSER_MODE";
-        String postPremoderationCode = "POST_PREMODERATION";
-        String statisticIsPublicCode = "STATISTIC_IS_PUBLIC";
-
-        String multiUserName = "Многопользовательский режим";
-        String postPremoderationName = "Премодерация постов";
-        String statisticIsPublicName = "Показать всем статистику блога";
-
-        String multiUserValue = "YES";
-        String postPremoderationValue = "YES";
-        String statisticIsPublicValue = "YES";
-
-        GlobalSetting multiUser = new GlobalSetting(1, multiUserCode, multiUserName, multiUserValue);
-        GlobalSetting postPremoderation = new GlobalSetting(2, postPremoderationCode, postPremoderationName, postPremoderationValue);
-        GlobalSetting statisticIsPublic = new GlobalSetting(3, statisticIsPublicCode, statisticIsPublicName, statisticIsPublicValue);
-
-        globalSettingRepository.save(multiUser);
-        globalSettingRepository.save(postPremoderation);
-        globalSettingRepository.save(statisticIsPublic);*/
-
         return "index";
     }
 

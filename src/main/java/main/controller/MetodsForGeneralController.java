@@ -1,9 +1,6 @@
 package main.controller;
 
-import main.models.Posts;
-import main.models.PostsRepository;
-import main.models.PostsVotes;
-import main.models.TagsRepository;
+import main.models.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,38 +8,41 @@ import java.util.*;
 
 public class MetodsForGeneralController {
 
+    //Метод который расставляет веса тегам
     public static Map<Object, Object> createMapForTag (String query, TagsRepository tagsRepository) {
         Map <String, Integer> tagCount = new HashMap<>();
-        Integer [] maxCount = new Integer [1];
+        Integer maxCount = 0;
         Map <Object, Object> tagWeight = new HashMap<>();
 
-        tagsRepository.findAll().forEach(tag -> {
+        for (Tags tag : tagsRepository.findAll()){//Для всех тегов
             if (tag.getName().contains(query)) {
-                tag.getPostsForTags().forEach(post -> {
-                    if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")) {
+                for (Posts post : tag.getPostsForTags()) {//Посты, которые содержат тег
+                    if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")) {//Проверка соответствия поста условиям публикации
                         if (tagCount.containsKey(tag.getName())) {
-                            tagCount.replace(tag.getName(), tagCount.get(tag.getName()), tagCount.get(tag.getName()) + 1);
-                            if (tagCount.get(tag.getName()) > maxCount[0]) {
-                                maxCount[0] = tagCount.get(tag.getName());
+                            tagCount.replace(tag.getName(), tagCount.get(tag.getName()), tagCount.get(tag.getName()) + 1);//Увеличиваем определенному тегу его количество в постах
+                            if (tagCount.get(tag.getName()) > maxCount) {
+                                maxCount = tagCount.get(tag.getName());//Смотрим максимальное количество тегов, при необходимости меняем
                             }
                         } else {
-                            tagCount.put(tag.getName(), 1);
+                            tagCount.put(tag.getName(), 1);//Если тег встречается впервые, то вносим его в список и присваиваем значение равное 1
                         }
                     }
-                });
+                }
             }
-        });
-        tagCount.keySet().forEach(tags -> {
-            tagWeight.put(tags, Double.valueOf(tagCount.get(tags)/maxCount[0]));
-        });
+        }
+        for (String tags : tagCount.keySet()) {
+            tagWeight.put(tags, Double.valueOf(tagCount.get(tags)/maxCount));//Считаем веса тегов
+        }
         return tagWeight;
     }
 
+    //Метод создания перечня тегов без запроса с подсчетов месов
     public static ArrayList<Map> createMapForTagWithoutQuery (TagsRepository tagsRepository) {
         Map <String, Integer> tagCount = new HashMap<>();
         ArrayList <Map> arrayForAnswer = new ArrayList<>();
         Set<Integer> tagCounts = new TreeSet<>();
 
+        //Считаем количество тегов вообще и сколь раз он встречается в постах
         tagsRepository.findAll().forEach(tag -> {
             int i = 0;
             for (Posts post : tag.getPostsForTags()) {
@@ -56,12 +56,13 @@ public class MetodsForGeneralController {
         tagsRepository.findAll().forEach(tag -> {
             Map <Object, Object> tagWeight = new HashMap<>();
             tagWeight.put("name", tag.getName());
-            tagWeight.put("weight", (double) tagCount.get(tag.getName())/tagCounts.stream().max(Integer::compareTo).get());
+            tagWeight.put("weight", (double) tagCount.get(tag.getName())/tagCounts.stream().max(Integer::compareTo).get());//Считаем весса тегов
             arrayForAnswer.add(tagWeight);
          });
         return arrayForAnswer;
     }
 
+    //Метод создания перечня постов по годам
     public static Map <Object, Object> createMapForGetCalendar (int year, PostsRepository postsRepository) {
         Set <Integer> years = new TreeSet<>();
         SimpleDateFormat dateFormatForYear = new SimpleDateFormat("yyyy");
@@ -87,10 +88,11 @@ public class MetodsForGeneralController {
         return answerForJson;
     }
 
+    //Метод сбора информации по постам
     public static Map <Object, Object> postsStatistics (List <Posts> posts) {
         Map <Object, Object> answerForJson = new HashMap<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        answerForJson.put("Постов", posts.size());
+        answerForJson.put("postsCount", posts.size());
         int likeCount = 0;
         int dislikeCounts = 0;
         int viewCounts = 0;
@@ -109,10 +111,10 @@ public class MetodsForGeneralController {
                 }
             }
         }
-        answerForJson.put("Лайков", likeCount);
-        answerForJson.put("Дизлайков", dislikeCounts);
-        answerForJson.put("Просмотров", viewCounts);
-        answerForJson.put("Первая публикация", dateFormat.format(date));
+        answerForJson.put("likesCount", likeCount);
+        answerForJson.put("dislikesCount", dislikeCounts);
+        answerForJson.put("viewsCount", viewCounts);
+        answerForJson.put("firstPublication", dateFormat.format(date));
         return answerForJson;
     }
 

@@ -8,21 +8,35 @@ import java.util.*;
 
 public class MetodsForPostController {
 
+    //Метод формирования информации о постах
     public static Map <Object, Object> createJsonForPostsList (Integer postId, PostsRepository postsRepository) {
-
+        int annoncelength = 100;//Количество знаков в анонсе
 
         Map <Object, Object> mapForAnswer = new HashMap<>();
         Map <Object, Object> userMap = new HashMap<>();
 
+        //Заполнение информации
         mapForAnswer.put("id", postId);
         mapForAnswer.put("time", postsRepository.findById(postId).get().getTime().toString());
         userMap.put("id", postsRepository.findById(postId).get().getUser().getId());
         userMap.put("name", postsRepository.findById(postId).get().getUser().getName());
         mapForAnswer.put("user", userMap);
         mapForAnswer.put("title", postsRepository.findById(postId).get().getTitle());
-        mapForAnswer.put("announce", "Не понял, что именно выводить");
+
+        String annonce;
+        //Формирование анонса
+        if (postsRepository.findById(postId).get().getText().length() < annoncelength) {//Проверка, что длина текста больше максимальной длины анонса
+            annonce = postsRepository.findById(postId).get().getText();
+        }
+        else {
+            annonce = postsRepository.findById(postId).get().getText().substring(0, annoncelength) + "...";//Добавление троеточия в конце анонса
+        }
+
+        mapForAnswer.put("announce", annonce);
+
         int likeCount = 0;
         int dislikeCounts = 0;
+        //Подсчет количества лайков и дизлайков
         for (int i = 0; i < postsRepository.findById(postId).get().getVotesToPost().size(); i++) {
             if (postsRepository.findById(postId).get().getVotesToPost().get(i).isValue()){
                 likeCount++;
@@ -39,13 +53,12 @@ public class MetodsForPostController {
         return mapForAnswer;
     }
 
+    //Формирование информации о посте
     public static Map <Object, Object> createJsonForPostById(Posts post) {
         Map <Object, Object> mapForAnswer = new HashMap<>();
         Map <Object, Object> userMap = new HashMap<>();
 
         ArrayList <Map> commentsList = new ArrayList<>();
-
-
 
         mapForAnswer.put("id", post.getId());
         mapForAnswer.put("time", post.getTime().toString());
@@ -91,9 +104,11 @@ public class MetodsForPostController {
         return mapForAnswer;
     }
 
+    //Формирование информации о посте при модерации
     public static Map <Object, Object> createJsonForModerationPosts(Posts post) {
         Map <Object, Object> mapForAnswer = new HashMap<>();
         Map <Object, Object> userMap = new HashMap<>();
+        int annoncelength = 100;
 
         mapForAnswer.put("id", post.getId());
         mapForAnswer.put("time", post.getTime().toString());
@@ -102,19 +117,37 @@ public class MetodsForPostController {
         userMap.put("name", post.getUser().getName());
         mapForAnswer.put("user", userMap);
         mapForAnswer.put("title", post.getTitle());
-        mapForAnswer.put("announce", "Не понял, что именно выводить");
+
+        String annonce;
+        if (post.getText().length() < annoncelength) {
+            annonce = post.getText();
+        }
+        else {
+            annonce = post.getText().substring(0, annoncelength) + "...";
+        }
+        mapForAnswer.put("announce", annonce);
 
         return mapForAnswer;
     }
 
+    //Формирование информации о посте для личного списка постов
     public static Map <Object, Object> createJsonForMyPosts(Posts post) {
         Map <Object, Object> mapForAnswer = new HashMap<>();
         Map <Object, Object> userMap = new HashMap<>();
+        int annoncelength = 100;
 
         mapForAnswer.put("id", post.getId());
         mapForAnswer.put("time", post.getTime().toString());
         mapForAnswer.put("title", post.getTitle());
-        mapForAnswer.put("announce", "Не понял, что именно выводить");
+
+        String annonce;
+        if (post.getText().length() < annoncelength) {
+            annonce = post.getText();
+        }
+        else {
+            annonce = post.getText().substring(0, annoncelength) + "...";
+        }
+        mapForAnswer.put("announce", annonce);
 
         //В описательной части API запросов задания нет требований к этой информации в ответе, но
         // при анализе работы веб-страницы это необходимо для работы сайта

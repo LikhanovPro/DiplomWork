@@ -5,8 +5,6 @@ import com.github.cage.GCage;
 import main.models.Posts;
 import main.models.PostsRepository;
 import main.models.Users;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.imageio.ImageIO;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -21,6 +19,7 @@ import java.util.*;
 
 public class MetodsForAuthController {
 
+    //Метод формирования информации о пользователе
     public static Map<Object, Object> createAuthInformation (Users user, PostsRepository postsRepository) {
         Map <Object, Object> answerJson = new HashMap<Object, Object>();
         Map <Object, Object> userMap = new HashMap<>();
@@ -33,9 +32,14 @@ public class MetodsForAuthController {
         userMap.put("moderation", user.isModerator());
 
         int moderationCount = 0;
+        //Считаем количество постов, которые были отмодерированы
         for (Posts post : postsRepository.findAll()) {
-            if (post.getModeratorId() == user.getId()) {
-                moderationCount++;
+            try {//Для новых публикаций модератор не определен, поэтому перехватываю исключение NullPointerException
+                if (post.getModeratorId() == user.getId()) {
+                    moderationCount++;
+                }
+            } catch (NullPointerException ex){
+                System.out.println("Для этого поста модератор не определен");
             }
         }
         userMap.put("moderationCount", moderationCount);
@@ -44,6 +48,7 @@ public class MetodsForAuthController {
         return answerJson;
     }
 
+    //Метод создания captcha кода
     public static ArrayList<String> metodsCreateCaptcha () throws IOException {
         //Так как каптча оказалась слишком большой по размеру, я ввел масштабирование в 2 раза
         ArrayList <String> answerArray = new ArrayList<>();
@@ -54,7 +59,9 @@ public class MetodsForAuthController {
         StringBuilder sbSecretCode = new StringBuilder();
         Random random = new Random();
         Cage cage = new GCage();
+        //Возможные символы для кода
         final char [] ELEMENTSFORCODE = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+        //Возможные символы для секретного кода
         final char [] ELEMENTSFORSECRETCODE = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
                 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
@@ -82,10 +89,12 @@ public class MetodsForAuthController {
         return answerArray;
     }
 
+    //Генерация кода восстановления пароля
     public static String generateRestoreCode () {
         StringBuilder code = new StringBuilder();
         int codeLength = 27;
         Random random = new Random();
+        //Возможные символы для ссылки восстановления пароля
         final char [] ELEMENTSFORRESTORECODE = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
                 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
@@ -95,9 +104,9 @@ public class MetodsForAuthController {
         return code.toString();
     }
 
+    //Метод, который отправляем сообщение на eMail
     public static void sendMail (String eMail, String restoreCode, String supportMail, String supportMailPassword) {
         String restorePasswordLink = "http://localhost:8080/login/change-password/" + restoreCode; // Условно заданная ссылка на сайт
-
 
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com");
