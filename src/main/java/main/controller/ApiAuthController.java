@@ -240,16 +240,17 @@ public class ApiAuthController extends HttpServlet {
         //Если предыдущее условие выполнено, т.е. captcha введен верно
         //Проверем код восстановления пользователя, хранящегося в БД коду восстановления, переданному с frontend
         for (Users user : usersRepository.findAll()) {
-            if (user.getCode().equals(code)) {
-                user.setPassword(password);
-                usersRepository.save(user);
-                answerJson.put("result", true);
+                //Добавлена проверка на null, т.к. возникали ошибки при переборе юзеров
+                if (user.getCode() != null && user.getCode().equals(code)) {
+                    user.setPassword(password);
+                    usersRepository.save(user);
+                    answerJson.put("result", true);
+                } else {
+                    answerJson.put("result", false);
+                    errors.put("code", "Ссылка для восстановления пароля устарела. <a href=\"/auth/restore\">Запросить ссылку снова</a>");
+                    answerJson.put("errors", errors);
                 }
-            else {
-                answerJson.put("result", false);
-                errors.put("code", "Ссылка для восстановления пароля устарела. <a href=\"/auth/restore\">Запросить ссылку снова</a>");
-                answerJson.put("errors", errors);
-            }
+
         }
         return new Gson().toJson(answerJson);
     }
