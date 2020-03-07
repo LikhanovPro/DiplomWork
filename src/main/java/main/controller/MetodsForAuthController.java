@@ -25,6 +25,7 @@ public class MetodsForAuthController {
         Map <Object, Object> userMap = new HashMap<>();
 
         answerJson.put("result" , true);
+
         userMap.put("id", user.getId());
         userMap.put("name", user.getName());
         userMap.put("photo", user.getPhoto());
