@@ -1,10 +1,14 @@
 package main.service.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import main.controller.DefaultController;
 import main.models.Posts;
 import main.models.PostsRepository;
 import main.models.Users;
 import main.models.UsersRepository;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,9 +20,10 @@ import java.util.Map;
        @JsonProperty
         Map <Object, Object> user = new HashMap<>();
 
-        public void getAuthInformation (Map<String, String> information, UsersRepository usersRepository, PostsRepository postsRepository) {
+        public void getAuthInformation (Map<String, String> information, UsersRepository usersRepository, PostsRepository postsRepository, HttpServletRequest request) {
             String eMail = information.get("e_mail");
             String password = information.get("password");
+            HttpSession session = request.getSession();
 
             this.result = false;
             //Выполняем поиск юзера по eMail и password
@@ -46,6 +51,11 @@ import java.util.Map;
                         }
                         this.user.put("moderationCount", moderationCount);
                         this.user.put("settings", user.isModerator());
+
+                        Map<String, Integer> sessionInformation = new HashMap<>();
+                        session.setAttribute("name", (int) (Math.random() * 1000)); //Создали случайным образом имя ссесии
+                        sessionInformation.put(String.valueOf(session.getAttribute("name")), user.getId()); // Под случайным именем сессии зафиксировали id текущего пользователя
+                        DefaultController.setSessionInformation(sessionInformation);
                     }
                 }
             }

@@ -29,7 +29,7 @@ public class ApiAuthController extends HttpServlet {
     //======================================================
 
     //Создаем объект, общий для всех контроллеров
-    private static Map<String, Integer> sessionInformation = new HashMap<>();
+    //private static Map<String, Integer> sessionInformation = new HashMap<>();
     //======================================================
 
     //Задаем почту и пароль к eMail Support с которого будет рассылка почты
@@ -43,11 +43,12 @@ public class ApiAuthController extends HttpServlet {
         HttpSession session = request.getSession();
 
         AuthPostLogIn authLogin = new AuthPostLogIn();
-        authLogin.getAuthInformation(information, usersRepository, postsRepository);
+        authLogin.getAuthInformation(information, usersRepository, postsRepository, request);
         //int sessionRandomInt = (int) (Math.random() * 1000);
-        session.setAttribute("name", (int) (Math.random() * 1000)); //Создали случайным образом имя ссесии
+        /*session.setAttribute("name", (int) (Math.random() * 1000)); //Создали случайным образом имя ссесии
+        DefaultController.setSessionInformation();
         sessionInformation.put(String.valueOf(session.getAttribute("name")), authLogin.getUserId()); // Под случайным именем сессии зафиксировали id текущего пользователя
-
+*/
         return ResponseEntity.status(HttpStatus.OK).body(authLogin);
     }
 
@@ -57,7 +58,7 @@ public class ApiAuthController extends HttpServlet {
         HttpSession session = request.getSession();
 
         AuthGetCheck authCheck = new AuthGetCheck();
-        authCheck.checkAuthInformation(session, sessionInformation, usersRepository, postsRepository);
+        authCheck.checkAuthInformation(session, DefaultController.getSessionInformation(), usersRepository, postsRepository);
 
         return ResponseEntity.status(HttpStatus.OK).body(authCheck);
     }
@@ -68,7 +69,7 @@ public class ApiAuthController extends HttpServlet {
         Map<Object, Object> answerJson = new HashMap<Object, Object>();
         HttpSession session = request.getSession();
         // Из текущей сессии получаем id авторизованного пользователя и удаляем его из сессии
-        sessionInformation.remove(String.valueOf(session.getAttribute("name")));
+        DefaultController.getSessionInformation().remove(String.valueOf(session.getAttribute("name")));
         answerJson.put("result", true);
         return ResponseEntity.status(HttpStatus.OK).body(new Gson().toJson(answerJson));
     }
@@ -115,7 +116,7 @@ public class ApiAuthController extends HttpServlet {
     }
 
     //=============================================================================================
-    //Геттеры и Сеттеры, необходимые для реализации методов Класса
+    /*//Геттеры и Сеттеры, необходимые для реализации методов Класса
     public Map<String, Integer> getSessionInformation() {
         return sessionInformation;
     }
@@ -128,5 +129,5 @@ public class ApiAuthController extends HttpServlet {
         HttpSession session = request.getSession();
 
         return sessionInformation.get((String) session.getAttribute("name"));
-    }
+    }*/
 }
