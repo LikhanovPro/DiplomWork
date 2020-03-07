@@ -273,7 +273,7 @@ public class ApiPostController extends HttpServlet {
         ArrayList <Map> arrayArrayForAnswer = new ArrayList<>();
         Map <Object, Object> answerJson = new HashMap<Object, Object>();
 
-        Integer userId = ApiAuthController.getIdUserLogin(request);
+        Integer userId = DefaultController.getIdUserLogin(request);
 
         //Проверка авторизации пользователя
         if (userId == null) {
@@ -317,7 +317,7 @@ public class ApiPostController extends HttpServlet {
         ArrayList <Map> arrayMapFormMetodsForMyPosts = new ArrayList<>();
         ArrayList <Map> arrayArrayForAnswer = new ArrayList<>();
         Map <Object, Object> answerJson = new HashMap<Object, Object>();
-        Integer userId = ApiAuthController.getIdUserLogin(request);
+        Integer userId = DefaultController.getIdUserLogin(request);
 
         //Проверка авторизации пользователя
         if (userId == null) {
@@ -382,7 +382,7 @@ public class ApiPostController extends HttpServlet {
         int textLength = 500; //Минлнимальное количество знаков текста поста
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:MM");
-        Integer userId = ApiAuthController.getIdUserLogin(request);
+        Integer userId = DefaultController.getIdUserLogin(request);
         Date time = dateFormat.parse(((String) information.get("time")).replaceAll("T", " "));//Дата передается со знаком "Т" ммежду датой и временем,убираю вручную
         boolean active;
         if (((Integer) information.get("active")) == 1){
@@ -470,7 +470,7 @@ public class ApiPostController extends HttpServlet {
         int titleLength = 10; //Минимальное еколичество знаков заголовка
         int textLength = 500; //Минлнимальное количество знаков текста поста
 
-        Integer userId = ApiAuthController.getIdUserLogin(request);
+        Integer userId = DefaultController.getIdUserLogin(request);
         //Проверяем авторизацию пользователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
@@ -542,7 +542,7 @@ public class ApiPostController extends HttpServlet {
                            @RequestParam("post_in") int postId) {
         Map<Object, Object> answerJson = new HashMap<Object, Object>();
 
-        Integer userId = ApiAuthController.getIdUserLogin(request);
+        Integer userId = DefaultController.getIdUserLogin(request);
         //Проверка авторизации польлзователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
@@ -578,7 +578,7 @@ public class ApiPostController extends HttpServlet {
     @PostMapping("/post/dislike")
     public String getDislike (HttpServletRequest request,
                            @RequestParam("post_in") int postId) {
-        Integer userId = ApiAuthController.getIdUserLogin(request);
+        Integer userId = DefaultController.getIdUserLogin(request);
         //Проверка авторизации польлзователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
