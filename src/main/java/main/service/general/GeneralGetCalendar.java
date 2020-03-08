@@ -1,10 +1,7 @@
 package main.service.general;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.Gson;
-import main.controller.MetodsForGeneralController;
 import main.models.PostsRepository;
-
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -15,7 +12,6 @@ public class GeneralGetCalendar {
 
     @JsonProperty
     Map <Object, Integer> posts = new HashMap<>();
-
 
     public GeneralGetCalendar (String year, PostsRepository postsRepository) {
         SimpleDateFormat dateFormatForYear = new SimpleDateFormat("yyyy");

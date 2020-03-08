@@ -1,10 +1,7 @@
 package main.service.general;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.Gson;
-import main.controller.ApiAuthController;
 import main.controller.DefaultController;
-import main.controller.MetodsForGeneralController;
 import main.models.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;

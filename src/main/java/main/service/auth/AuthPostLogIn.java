@@ -6,7 +6,6 @@ import main.models.Posts;
 import main.models.PostsRepository;
 import main.models.Users;
 import main.models.UsersRepository;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.HashMap;

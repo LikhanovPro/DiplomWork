@@ -1,15 +1,12 @@
 package main.service.general;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.Gson;
-import main.controller.ApiAuthController;
 import main.controller.DefaultController;
 import main.models.PostComments;
 import main.models.PostCommentsRepository;
 import main.models.PostsRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;

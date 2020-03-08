@@ -40,15 +40,9 @@ public class ApiAuthController extends HttpServlet {
     //Котроллер входа под своей учетной записью
     @PostMapping("/login")
     public ResponseEntity authLogin(@RequestBody Map<String, String> information, HttpServletRequest request) {
-        HttpSession session = request.getSession();
 
         AuthPostLogIn authLogin = new AuthPostLogIn();
         authLogin.getAuthInformation(information, usersRepository, postsRepository, request);
-        //int sessionRandomInt = (int) (Math.random() * 1000);
-        /*session.setAttribute("name", (int) (Math.random() * 1000)); //Создали случайным образом имя ссесии
-        DefaultController.setSessionInformation();
-        sessionInformation.put(String.valueOf(session.getAttribute("name")), authLogin.getUserId()); // Под случайным именем сессии зафиксировали id текущего пользователя
-*/
         return ResponseEntity.status(HttpStatus.OK).body(authLogin);
     }
 
@@ -114,20 +108,4 @@ public class ApiAuthController extends HttpServlet {
 
         return ResponseEntity.status(HttpStatus.OK).body(newPassword);
     }
-
-    //=============================================================================================
-    /*//Геттеры и Сеттеры, необходимые для реализации методов Класса
-    public Map<String, Integer> getSessionInformation() {
-        return sessionInformation;
-    }
-
-    public void setSessionInformation(Map<String, Integer> sessionInformation) {
-        this.sessionInformation = sessionInformation;
-    }
-
-    public static Integer getIdUserLogin (HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        return sessionInformation.get((String) session.getAttribute("name"));
-    }*/
 }

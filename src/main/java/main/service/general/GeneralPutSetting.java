@@ -6,7 +6,6 @@ import main.models.GlobalSettingRepository;
 import main.models.UsersRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-
 import javax.servlet.http.HttpServletRequest;
 
 public class GeneralPutSetting {

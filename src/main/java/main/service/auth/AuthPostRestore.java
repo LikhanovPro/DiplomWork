@@ -1,11 +1,8 @@
 package main.service.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.Gson;
-import main.controller.MetodsForAuthController;
 import main.models.Users;
 import main.models.UsersRepository;
-
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;

@@ -1,12 +1,10 @@
 package main.service.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.Gson;
 import main.models.CaptchaCodes;
 import main.models.CaptchaCodesRepository;
 import main.models.Users;
 import main.models.UsersRepository;
-
 import java.util.HashMap;
 import java.util.Map;
 

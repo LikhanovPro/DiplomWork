@@ -1,13 +1,10 @@
 package main.service.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.Gson;
-import main.controller.MetodsForAuthController;
 import main.models.Posts;
 import main.models.PostsRepository;
 import main.models.Users;
 import main.models.UsersRepository;
-
 import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.Map;

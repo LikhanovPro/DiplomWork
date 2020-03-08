@@ -1,8 +1,6 @@
 package main.service.general;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.Gson;
-import main.controller.ApiAuthController;
 import main.controller.DefaultController;
 import main.models.ModeratorStatus;
 import main.models.Posts;
@@ -10,9 +8,7 @@ import main.models.PostsRepository;
 import main.models.UsersRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.Map;
 
 public class GeneralPostModeration {

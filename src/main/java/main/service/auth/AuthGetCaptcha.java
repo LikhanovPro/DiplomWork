@@ -3,11 +3,8 @@ package main.service.auth;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.cage.Cage;
 import com.github.cage.GCage;
-import com.google.gson.Gson;
-import main.controller.MetodsForAuthController;
 import main.models.CaptchaCodes;
 import main.models.CaptchaCodesRepository;
-
 import javax.imageio.ImageIO;
 import javax.xml.bind.DatatypeConverter;
 import java.awt.*;
@@ -29,12 +26,6 @@ public class AuthGetCaptcha {
 
     //Продолжительность жизни captcha кода в часах
     int lifeTime = 1;
-
-    //Позиция необходимой информации в файле возвращаемом методом: ArrayList <String> createdCaptcha = MetodsForAuthController.metodsCreateCaptcha();
-    /*int codeIndex = 0;
-    int secretCodeIndex = 1;
-    int captchaIndex = 2;*/
-
 
     public void createCaptcha(CaptchaCodesRepository captchaCodesRepository) throws IOException {
 
@@ -87,14 +78,8 @@ public class AuthGetCaptcha {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(result, "png", baos);
         String data = DatatypeConverter.printBase64Binary(baos.toByteArray()); // Преобразование в Base64
-        //answerArray.add("data:result/png;base64," + data); // Добавка, что бы читалось с HTML
-
         this.image = "data:result/png;base64," + data; // Добавка, что бы читалось с HTML
 
         captchaCodesRepository.save(captchaCodes);
-
-        //answerJson.put("secret", createdCaptcha.get(secretCodeIndex)); //Возвращаем секретный код от сервера на frontend
-        //answerJson.put("image", createdCaptcha.get(captchaIndex)); //Возвращаем картинку(зашифрованный код) на frontend для отображения на странице
-        //return new Gson().toJson(answerJson);
     }
 }

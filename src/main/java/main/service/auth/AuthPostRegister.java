@@ -1,9 +1,7 @@
 package main.service.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.Gson;
 import main.models.*;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +10,7 @@ public class AuthPostRegister {
 
     @JsonProperty
     boolean result;
+
     @JsonProperty
     Map<Object, Object> errors = new HashMap<>();
 

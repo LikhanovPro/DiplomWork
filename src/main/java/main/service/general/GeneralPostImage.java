@@ -1,12 +1,9 @@
 package main.service.general;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import main.controller.ApiAuthController;
 import main.controller.DefaultController;
 import main.models.UsersRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
@@ -27,7 +24,6 @@ public class GeneralPostImage {
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
 
         String userName = usersRepository.findById(userId).get().getName(); //Получаем имя пользоателя, использовал для создания имен подпапок
         StringBuilder pathToFolderWithImage = new StringBuilder();
