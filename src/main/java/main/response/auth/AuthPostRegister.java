@@ -1,0 +1,86 @@
+package main.response.auth;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import main.models.*;
+import main.requestObject.auth.AuthPostRegisterObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+public class AuthPostRegister {
+
+    //Подключаем репозитории
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private PostsRepository postsRepository;
+
+    @Autowired
+    private CaptchaCodesRepository captchaCodesRepository;
+    //======================================================
+
+    @JsonProperty
+    boolean result;
+
+    @JsonProperty
+    Map<Object, Object> errors = new HashMap<>();
+
+    private AuthPostRegister (AuthPostRegisterObject information) {
+        int codeLength = 6; //Минлимальная длина пароля (password)
+
+        //Информация в запросе передается в формате Json
+        String eMail = information.geteMail();
+        String password = information.getPassword();
+        String captcha = information.getCaptcha();
+        String captchaSecret = information.getCaptcha_secret();
+
+        //Проверка существования уже зарегистрированного Email
+        for (Users user : usersRepository.findAll()) {
+            if (user.geteMail().equals(eMail)) {
+                this.result = false;
+                errors.put("email", "Этот e-mail уже зарегистрирован");
+            }
+        }
+
+        //Проверка длины кода не менее 6 знаков
+        if (password.length() < codeLength) {
+            this.result = false;
+            errors.put("password", "Пароль короче 6-ти символов");
+        }
+
+        this.result = false;
+        errors.put("captcha", "Ошибка генерации кода captcha");
+
+        //Проверка соответствия captcha кода, который создается автоматически и записывается в БД
+        for (CaptchaCodes captchaCodes : captchaCodesRepository.findAll()) {
+            if (captchaCodes.getSecretCode().equals(captchaSecret)) {
+                if (captchaCodes.getCode().equals(captcha)) {
+                    Users newUser = new Users();
+                    newUser.seteMail(eMail);
+                    newUser.setModerator(false);
+                    newUser.setName(eMail); //В форме регистрации нет поля name, предполагаю регистрацию с именем равным eMail
+                    //а затем уже пользователь может его изменить
+                    newUser.setPassword(password);
+                    newUser.setRegTime(new Date());
+                    usersRepository.save(newUser);
+                    this.result = true;
+                    errors.clear();
+                }
+                else {
+                    this.result = false;
+                    errors.put("captcha", "Код с картинки введен неверно");
+                }
+            }
+        }
+    }
+
+    public AuthPostRegister () {}
+
+    public ResponseEntity getAuthPostRegister (AuthPostRegisterObject information) {
+        return ResponseEntity.status(HttpStatus.OK).body(new AuthPostRegister(information));
+    }
+}

@@ -1,9 +1,11 @@
 package main.controller;
 
 import main.models.*;
-import main.service.post.*;
+import main.requestObject.post.PostPostCreatePostObject;
+import main.requestObject.post.PostPostDislikeObject;
+import main.requestObject.post.PostPostLikeObject;
+import main.response.post.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServlet;
@@ -15,7 +17,32 @@ import java.util.*;
 @RequestMapping ("/api")
 public class ApiPostController extends HttpServlet {
 
-    //Подключаем репозитории
+    @Autowired
+    PostGetPost postGetPost;
+
+    private PostPostCreatePost addNewPost = new PostPostCreatePost();
+
+    private PostGetSearch postGetSearch = new PostGetSearch();
+
+   // private PostGetPost postGetPost = new PostGetPost();
+
+    private PostGetById postGetById = new PostGetById();
+
+    private PostGetByDate postGetByDate = new PostGetByDate();
+
+    private PostGetByTag postGetByTag = new PostGetByTag();
+
+    private PostGetPostsForModeration postGetPostsForModeration = new PostGetPostsForModeration();
+
+    private PostGetMyPosts postGetMyPosts = new PostGetMyPosts();
+
+    private PostPutPostById postPutPostById = new PostPutPostById();
+
+    private PostPostLike postPostLike = new PostPostLike();
+
+    private PostPostDislike postPostDislike = new PostPostDislike();
+
+    /*//Подключаем репозитории
     @Autowired
     private CaptchaCodesRepository captchaCodesRepository;
     @Autowired
@@ -32,16 +59,13 @@ public class ApiPostController extends HttpServlet {
     private TagsRepository tagsRepository;
     @Autowired
     private UsersRepository usersRepository;
-    //==========================================
+    //==========================================*/
 
     @GetMapping ("/post")
     public ResponseEntity postsList (@RequestParam("offset") int offset,
                              @RequestParam ("limit") int limit,
                              @RequestParam ("mode") String mode) {
-
-        PostGetPost posts = new PostGetPost(offset, limit, mode, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(posts);
+        return postGetPost.getPosts(offset, limit, mode);
     }
 
     //Контроллер поиска постов по словам
@@ -49,19 +73,13 @@ public class ApiPostController extends HttpServlet {
     public ResponseEntity searchPosts (@RequestParam("offset") int offset,
                              @RequestParam ("limit") int limit,
                              @RequestParam ("query") String query) {
-
-        PostGetSearch searchPost = new PostGetSearch(offset, limit, query, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(searchPost);
+        return postGetSearch.getPosts(offset, limit, query);
     }
 
     //Контроллер вывод поста по id
     @GetMapping ("/post/{id}")
     public ResponseEntity postById (@PathVariable int id) {
-
-        PostGetById postById = new PostGetById(id, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(postById);
+        return postGetById.getPost(id);
     }
 
     //Контроллер получения постов по дате публикации
@@ -69,10 +87,7 @@ public class ApiPostController extends HttpServlet {
     public ResponseEntity postsByDate (@RequestParam("offset") int offset,
                                @RequestParam ("limit") int limit,
                                @RequestParam ("date") String date) {
-
-        PostGetByDate postByDate = new PostGetByDate(offset, limit, date, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(postByDate);
+        return postGetByDate.getPost(offset, limit, date);
     }
 
     //Контроллер вывода постов по тегам
@@ -80,10 +95,7 @@ public class ApiPostController extends HttpServlet {
     public ResponseEntity postsByTag (@RequestParam("offset") int offset,
                                @RequestParam ("limit") int limit,
                                @RequestParam ("tag") String tag) {
-
-        PostGetByTag postByTag = new PostGetByTag(offset, limit, tag, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(postByTag);
+        return postGetByTag.getPost(offset, limit, tag);
     }
 
     //Контроллер вывода постов для модерации
@@ -92,10 +104,7 @@ public class ApiPostController extends HttpServlet {
                                    @RequestParam("offset") int offset,
                                    @RequestParam ("limit") int limit,
                                    @RequestParam ("status") String status) {
-
-        PostGetPostsForModeration postsForModeration = new PostGetPostsForModeration(request, offset, limit, status, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(postsForModeration);
+        return postGetPostsForModeration.moderationPost(request, offset, limit, status);
     }
 
     //Контроллер вывода постов пользователя
@@ -104,20 +113,14 @@ public class ApiPostController extends HttpServlet {
                            @RequestParam("offset") int offset,
                            @RequestParam ("limit") int limit,
                            @RequestParam ("status") String status) {
-
-        PostGetMyPosts myPosts = new PostGetMyPosts(request, offset, limit, status, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(myPosts);
+        return postGetMyPosts.getMyPost(request, offset, limit, status);
     }
 
     //Контроллер создания поста
     @PostMapping ("/post")
     public ResponseEntity createPost (HttpServletRequest request,
-                              @RequestBody Map<String, Object> information) throws ParseException  {
-
-        PostPostCreatePost createPost = new PostPostCreatePost(request, information, postsRepository, tagsRepository, tag2PostRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(createPost);
+                              @RequestBody PostPostCreatePostObject information) throws ParseException  {
+        return addNewPost.getPostPostCreatePost(request, information);
     }
 
     //Контроллер изменения поста по id
@@ -129,30 +132,20 @@ public class ApiPostController extends HttpServlet {
                               @RequestParam("text") String text,
                               @RequestParam("tags") String tags,
                               @PathVariable int id) {
-
-        PostPutPostById changePostById = new PostPutPostById(request, time, active, title, text, tags, id, usersRepository,
-                postsRepository, tagsRepository, tag2PostRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(changePostById);
+        return postPutPostById.changePost(request, time, active, title, text, tags, id);
     }
 
     //Контроллер постановки лайка посту
     @PostMapping("/post/like")
     public ResponseEntity getLike (HttpServletRequest request,
-                                   @RequestBody Map<String, Object> information) {
-
-        PostPostLike getLike = new PostPostLike(request, information, postsVotesRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(getLike);
+                                   @RequestBody PostPostLikeObject information) {
+        return postPostLike.getLike(request, information);
     }
 
     //Контроллер постановки дизлайка
     @PostMapping("/post/dislike")
     public ResponseEntity getDislike (HttpServletRequest request,
-                                      @RequestBody Map<String, Object> information) {
-
-        PostPostDislike getDislike = new PostPostDislike(request, information, postsVotesRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(getDislike);
+                                      @RequestBody PostPostDislikeObject information) {
+        return postPostDislike.getDislike(request, information);
     }
 }
