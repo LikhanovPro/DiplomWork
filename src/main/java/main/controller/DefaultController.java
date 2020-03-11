@@ -37,14 +37,13 @@ public class DefaultController {
         return sessionInformation;
     }
 
-    public static void setSessionInformation(Map<String, Integer> sessionInformation) {
-        sessionInformation = sessionInformation;
+    public static void setSessionInformation(Map<String, Integer> information) {
+        sessionInformation = information;
     }
 
     public static Integer getIdUserLogin (HttpServletRequest request) {
         HttpSession session = request.getSession();
 
-        return sessionInformation.get((String) session.getAttribute("name"));
+        return sessionInformation.get(String.valueOf(session.getAttribute("name")));
     }
-
 }

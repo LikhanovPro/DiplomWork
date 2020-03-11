@@ -1,7 +1,9 @@
 package main.controller;
 
 import main.models.*;
-import main.service.general.*;
+import main.requestObject.general.GeneralPostMProfileObject;
+import main.requestObject.general.GeneralPostModerationObject;
+import main.response.general.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +14,29 @@ import java.util.*;
 @RestController
 public class ApiGeneralController {
 
-    //Подключаем репозитории
+    private GeneralGetInit generalGetInit = new GeneralGetInit();
+
+    private GeneralGetTag generalGetTag = new GeneralGetTag();
+
+    private GeneralGetCalendar generalGetCalendar = new GeneralGetCalendar();
+
+    private GeneralPostComment generalPostComment = new GeneralPostComment();
+
+    private GeneralPostModeration generalPostModeration = new GeneralPostModeration();
+
+    private GeneralPostImage generalPostImage = new GeneralPostImage();
+
+    private GeneralGetMyStatistic generalGetMyStatistic = new GeneralGetMyStatistic();
+
+    private GeneralGetAllStatistic generalGetAllStatistic = new GeneralGetAllStatistic();
+
+    private GeneralGetSetting generalGetSetting = new GeneralGetSetting();
+
+    private GeneralPutSetting generalPutSetting = new GeneralPutSetting();
+
+    private GeneralPostMyProfile generalPostMyProfile = new GeneralPostMyProfile();
+
+    /*//Подключаем репозитории
     @Autowired
     private TagsRepository tagsRepository;
 
@@ -27,34 +51,25 @@ public class ApiGeneralController {
 
     @Autowired
     private GlobalSettingRepository globalSettingRepository;
-    //=====================================================
+    //=====================================================*/
 
     //Передаем на frontend ощую информацию о создателе сайта
     @GetMapping ("/api/init")
-    public static ResponseEntity blogInformation () {
-
-        GeneralGetInit newGeneralInit = new GeneralGetInit("DevPub", "Рассказы разработчиков", "+7 903 666-44-55",
+    public ResponseEntity blogInformation () {
+        return generalGetInit.getGeneralInit("DevPub", "Рассказы разработчиков", "+7 903 666-44-55",
                 "mail@mail.ru", "Дмитрий Сергеевич", "2005");
-
-        return ResponseEntity.status(HttpStatus.OK).body(newGeneralInit);
     }
 
     //передаем на frontend перечень Тэгов
     @GetMapping ("/api/tag")
     public ResponseEntity getTag () {
-
-        GeneralGetTag tagList = new GeneralGetTag(tagsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(tagList);
+        return generalGetTag.getTags();
     }
 
     //Контроллер годов, в которые были публикации
     @GetMapping ("/api/calendar")
     public ResponseEntity getCalendar (@RequestParam("year") String year) {
-
-        GeneralGetCalendar calendar = new GeneralGetCalendar(year, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(calendar);
+        return generalGetCalendar.getCalendar(year);
     }
 
     //Контроллер создания коментария к посту или к коментарию
@@ -63,77 +78,52 @@ public class ApiGeneralController {
                               @RequestParam("parent_id") Integer parentId,
                               @RequestParam("post_id") int postId,
                               @RequestParam("text") String text) {
-
-        GeneralPostComment comment = new GeneralPostComment(request, parentId, postId, text, postCommentsRepository, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(comment);
+       return generalPostComment.addComments(request, parentId, postId, text);
     }
 
     //Контроллер модерации поста
     @PostMapping ("/api/moderation")
     public ResponseEntity moderationPost (HttpServletRequest request,
-                                  @RequestBody Map<String, Object> information){
-
-        GeneralPostModeration moderation = new GeneralPostModeration(request, information, postsRepository, usersRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(moderation);
+                                  @RequestBody GeneralPostModerationObject information){
+        return generalPostModeration.moderationPost(request, information);
     }
 
     //Контроллер сохранения картинки
     @PostMapping ("/api/{image}")
     public String safeImage (HttpServletRequest request, @PathVariable String image) {
-
-        GeneralPostImage copyImage = new GeneralPostImage(request, image, usersRepository);
-
-        return copyImage.getPathToImage();
+        return generalPostImage.getPathToImage(request, image);
     }
 
     //Контроллер вывода на экран статистики пользователя
     @GetMapping("/api/statistics/my")
     public ResponseEntity myStatistics (HttpServletRequest request) {
-
-        GeneralGetMyStatistic getMyStatistic = new GeneralGetMyStatistic(request, usersRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(getMyStatistic);
+        return generalGetMyStatistic.getMyStatistic(request);
     }
 
     //Контролер вывода статистики по сайту в общем
     @GetMapping("/api/statistics/all")
     public ResponseEntity allStatistics (HttpServletRequest request) {
-
-        GeneralGetAllStatistic getAllStatistic = new GeneralGetAllStatistic(request, globalSettingRepository, postsRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(getAllStatistic);
+        return generalGetAllStatistic.getAllStatistic(request);
     }
 
     //Контроллер передачи настроек сайта
     @GetMapping("/api/settings")
     public ResponseEntity getSettings (HttpServletRequest request) {
-
-        GeneralGetSetting getSetting = new GeneralGetSetting(request, usersRepository, globalSettingRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(getSetting);
+        return generalGetSetting.getSetting(request);
     }
 
     //Контроллер изменения настроек сайта
     @PutMapping ("/api/settings")
     public ResponseEntity saveSettings (HttpServletRequest request) {
-
-        GeneralPutSetting putSetting = new GeneralPutSetting(request, usersRepository, globalSettingRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(putSetting);
+        return generalPutSetting.putSetting(request);
     }
 
     //Контроллер установки порфиля
     @PostMapping("api/profile/my")
     public ResponseEntity editProfile (HttpServletRequest request,
-                               @RequestBody Map<String, Object> information) {
-
-        GeneralPostMyProfile myProfile = new GeneralPostMyProfile(request, information, usersRepository);
-
-        return ResponseEntity.status(HttpStatus.OK).body(myProfile);
+                               @RequestBody GeneralPostMProfileObject information) {
+        return generalPostMyProfile.changeMyProfile(request, information);
     }
-
 }
 
 
