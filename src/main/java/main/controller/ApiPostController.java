@@ -4,8 +4,10 @@ import main.models.*;
 import main.requestObject.PostPostCreatePostObject;
 import main.requestObject.PostPostDislikeObject;
 import main.requestObject.PostPostLikeObject;
+import main.requestObject.PostPutPostByIdObject;
 import main.responseObject.*;
 import main.service.PostService;
+import main.service.ResponseApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,9 +25,8 @@ public class ApiPostController extends HttpServlet {
 
     @GetMapping ("/post")
     public ResponseEntity postsList (@RequestParam("offset") int offset,
-                             @RequestParam ("limit") int limit,
-                             @RequestParam ("mode") String mode) {
-
+                                                   @RequestParam ("limit") int limit,
+                                                   @RequestParam ("mode") String mode) {
         return postService.postList(offset, limit, mode);
     }
 
@@ -87,13 +88,8 @@ public class ApiPostController extends HttpServlet {
     //Контроллер изменения поста по id
     @PutMapping ("/post/{id}")
     public ResponseEntity editPost (HttpServletRequest request,
-                              @RequestParam("time") Date time,
-                              @RequestParam("active") boolean active,
-                              @RequestParam("title") String title,
-                              @RequestParam("text") String text,
-                              @RequestParam("tags") String tags,
-                              @PathVariable int id) {
-        return postService.putPostById(request, time, active, title, text, tags, id);
+                                    @RequestBody PostPutPostByIdObject information) throws ParseException {
+        return postService.putPostById(request, information);
     }
 
     //Контроллер постановки лайка посту

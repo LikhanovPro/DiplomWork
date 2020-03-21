@@ -6,6 +6,9 @@ import main.service.GeneralService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.mail.Multipart;
 import javax.servlet.http.HttpServletRequest;
 
 @RestController
@@ -50,7 +53,7 @@ public class ApiGeneralController {
 
     //Контроллер сохранения картинки
     @PostMapping ("/api/{image}")
-    public String safeImage (HttpServletRequest request, @PathVariable String image) {
+    public String safeImage (HttpServletRequest request, @RequestParam MultipartFile image) {
         return generalService.generalImage(request, image);
     }
 

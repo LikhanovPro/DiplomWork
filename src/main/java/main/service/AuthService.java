@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
-public class AuthService {
+public class AuthService implements ResponseApi {
 
     //Подключаем репозитории
     @Autowired
@@ -46,10 +46,8 @@ public class AuthService {
     private static String supportMailPassword = "123DiplomWork";
     //=======================================================
 
-    //Продолжительность жизни captcha кода в часах
-    int lifeTime = 1;
-
-    int codeLength = 6; //Минимальная длина кода (password)
+    @Autowired
+    WebProperties webProperties;
     //======================================================
 
     public ResponseEntity authLogIn (AuthPostLogInObject information, HttpServletRequest request) {
@@ -59,7 +57,6 @@ public class AuthService {
         String password = information.getPassword();
         HttpSession session = request.getSession();
 
-        authPostLogIn.setResult(false);
         //Выполняем поиск юзера по eMail и password
         for (Users user : usersRepository.findAll()) {
             if (user.geteMail().equals(eMail)) {
@@ -72,14 +69,13 @@ public class AuthService {
                     session.setAttribute("name", (int) (Math.random() * 1000)); //Создали случайным образом имя ссесии
                     sessionInformation.put(String.valueOf(session.getAttribute("name")), user.getId()); // Под случайным именем сессии зафиксировали id текущего пользователя
                     DefaultController.setSessionInformation(sessionInformation);
+                    return ResponseEntity.status(HttpStatus.OK).body(authPostLogIn);
                 }
             }
         }
-        return ResponseEntity.status(HttpStatus.OK).body(authPostLogIn);
+        authPostLogIn.setResult(false);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authPostLogIn);
     }
-    /*public Integer getUserId() {
-        return (Integer) this.user.get("id");
-    }*/
 //--------------------------------------------------------------------------------------------------------------------
 
     public ResponseEntity authCheck (HttpServletRequest request) {
@@ -172,6 +168,7 @@ public class AuthService {
 
     public ResponseEntity createCaptcha() throws IOException {
         AuthGetCaptcha authGetCaptcha = new AuthGetCaptcha();
+        int lifeTime = webProperties.getLifeTime();
 
         //Проверка устаревания уже имеющихся кодов captcha
         captchaCodesRepository.findAll().forEach(captchaCodes -> {
@@ -295,6 +292,7 @@ public class AuthService {
     public ResponseEntity authChagePassword (AuthPostPasswordObject information) {
         AuthPostPassword authPostPassword = new AuthPostPassword();
         Map<Object, Object> errors = new HashMap<>();
+        int codeLength = webProperties.getCodeLength();
 
         //Информация с frontend приходит в виде Json файла
         String code = information.getCode();

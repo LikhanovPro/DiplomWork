@@ -5,11 +5,11 @@ import main.models.*;
 import main.requestObject.PostPostCreatePostObject;
 import main.requestObject.PostPostDislikeObject;
 import main.requestObject.PostPostLikeObject;
+import main.requestObject.PostPutPostByIdObject;
 import main.responseObject.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletRequest;
@@ -18,7 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
-public class PostService {
+public class PostService implements ResponseApi {
 
     //Подключаем репозитории
     @Autowired
@@ -37,6 +37,11 @@ public class PostService {
     private TagsRepository tagsRepository;
     @Autowired
     private UsersRepository usersRepository;
+    //==========================================
+
+    @Autowired
+    WebProperties webProperties;
+
     //==========================================
 
 
@@ -179,14 +184,20 @@ public class PostService {
         Map <Object, Object> user = new HashMap<>();
         ArrayList<Map> comments = new ArrayList<>();
         List<String> tags = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:MM");
 
+
+        if (!postsRepository.findById(id).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Пост с данным id не найден");
+        }
         //Получаем пост по id номеру
         Posts post = postsRepository.findById(id).get();
+
 
         //Сложный запрос на соответствие поста условиям
         if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED") && post.getTime().before(new Date())) {
             postGetById.setId(post.getId());
-            postGetById.setTime(post.getTime().toString());
+            postGetById.setTime(dateFormat.format(post.getTime()));
             user.put("id", post.getUser().getId());
             user.put("name", post.getUser().getName());
             postGetById.setUser(user);
@@ -402,9 +413,10 @@ public class PostService {
     public ResponseEntity createPost (HttpServletRequest request, PostPostCreatePostObject information) throws ParseException {
         PostPostCreatePost postPostCreatePost = new PostPostCreatePost();
         Map <String, String> errors = new HashMap<>();
+        int titleLength = webProperties.getTitleLength(); //Минимальное количество знаков заголовка
+        int textLength = webProperties.getTextLength(); //Минлнимальное количество знаков текста поста
 
-        int titleLength = 10; //Минимальное еколичество знаков заголовка
-        int textLength = 500; //Минлнимальное количество знаков текста поста
+
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:MM");
         Integer userId = DefaultController.getIdUserLogin(request);
@@ -432,124 +444,144 @@ public class PostService {
         }
 
         //Проверка соотвествия количества знаков заголовка и текста
-        if (title.length() < titleLength || text.length() < textLength) {
-            errors.put("title", "Заголовок не установлен");
-            errors.put("text", "Текст публикации слишком короткий");
+        if (title.length() < titleLength) {
+            System.out.println(title.length());
+            System.out.println(titleLength);
+            errors.put("title", "Заголовок не установлен или слишком короткий");
             postPostCreatePost.setErrors(errors);
             postPostCreatePost.setResult(false);
         }
         else {
-            Posts post = new Posts();
-            post.setActive(active);
-            ModeratorStatus newPost;
-            newPost = ModeratorStatus.NEW;
-            post.setModerationStatus(newPost);
-            post.setModeratorId(null);
-            post.setText(text);
-            post.setTime(time);
-            post.setTitle(title);
-            post.setUserId(userId);
-            post.setViewCount(0);
-            int postId = postsRepository.save(post).getId();
+            if (text.length() < textLength) {
+                errors.put("text", "Текст публикации слишком короткий");
+                postPostCreatePost.setErrors(errors);
+                postPostCreatePost.setResult(false);
+            } else {
+                Posts post = new Posts();
+                post.setActive(active);
+                ModeratorStatus newPost;
+                newPost = ModeratorStatus.NEW;
+                post.setModerationStatus(newPost);
+                post.setModeratorId(null);
+                post.setText(text);
+                post.setTime(time);
+                post.setTitle(title);
+                post.setUserId(userId);
+                post.setViewCount(0);
+                int postId = postsRepository.save(post).getId();
 
-            //Поиск тегов, сохранение и получение их Id - при отладке вынести во внешний метод
-            Map <String, Integer> tagsNames = new HashMap<>();
-            for (Tags tag : tagsRepository.findAll()) {
-                tagsNames.put(tag.getName(), tag.getId());
-            }
-            ArrayList <Integer> tagsId = new ArrayList<>();
-            for (int i = 0; i < tags.size(); i++) {
-                if (tagsNames.containsKey(tags.get(i).replaceAll(",", ""))) {
-                    tagsId.add(tagsNames.get(tags.get(i)));
+                //Поиск тегов, сохранение и получение их Id - при отладке вынести во внешний метод
+                Map<String, Integer> tagsNames = new HashMap<>();
+                for (Tags tag : tagsRepository.findAll()) {
+                    tagsNames.put(tag.getName(), tag.getId());
                 }
-                else {//Если тегов нет в БД, то создаем новый тег
-                    Tags newTag = new Tags();
-                    newTag.setName(tags.get(i));
-                    tagsId.add(tagsRepository.save(newTag).getId());
+                ArrayList<Integer> tagsId = new ArrayList<>();
+                for (int i = 0; i < tags.size(); i++) {
+                    if (tagsNames.containsKey(tags.get(i).replaceAll(",", ""))) {
+                        tagsId.add(tagsNames.get(tags.get(i)));
+                    } else {//Если тегов нет в БД, то создаем новый тег
+                        Tags newTag = new Tags();
+                        newTag.setName(tags.get(i));
+                        tagsId.add(tagsRepository.save(newTag).getId());
+                    }
                 }
+                //Связываем теги с постом
+                tagsId.forEach(tagId -> {
+                    Tag2Post tag2Post = new Tag2Post();
+                    tag2Post.setTagId(tagId);
+                    tag2Post.setPostId(postId);
+                    tag2PostRepository.save(tag2Post);
+                });
+                postPostCreatePost.setResult(true);
             }
-            //Связываем теги с постом
-            tagsId.forEach(tagId -> {
-                Tag2Post tag2Post = new Tag2Post();
-                tag2Post.setTagId(tagId);
-                tag2Post.setPostId(postId);
-                tag2PostRepository.save(tag2Post);
-            });
-            postPostCreatePost.setResult(true);
         }
         return ResponseEntity.status(HttpStatus.OK).body(postPostCreatePost);
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity putPostById (HttpServletRequest request, Date time, boolean active, String title, String text, String tags, int id) {
+    public ResponseEntity putPostById (HttpServletRequest request, PostPutPostByIdObject information) throws ParseException {
         PostPutPostById postPutPostById = new PostPutPostById();
         Map<String, String> errors = new HashMap<>();
+        int titleLength = webProperties.getTitleLength(); //Минимальное количество знаков заголовка
+        int textLength = webProperties.getTextLength(); //Минлнимальное количество знаков текста поста
 
-        int titleLength = 10; //Минимальное еколичество знаков заголовка
-        int textLength = 500; //Минлнимальное количество знаков текста поста
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:MM");
         Integer userId = DefaultController.getIdUserLogin(request);
+        Date time = dateFormat.parse((information.getTime()).replaceAll("T", " "));//Дата передается со знаком "Т" ммежду датой и временем,убираю вручную
+        boolean active = information.isActive();
+        String title = information.getTitle();
+        String text = information.getText();
+        ArrayList<String> tags = information.getTags();
+
+        userId = DefaultController.getIdUserLogin(request);
         //Проверяем авторизацию пользователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
 
         //Проверка соответствия условий заголовка и текста
-        if (title.length() < titleLength || text.length() < textLength) {
-            errors.put("title", "Заголовок не установлен");
-            errors.put("text", "Текст публикации слишком короткий");
+        if (title.length() < titleLength) {
+            errors.put("title", "Заголовок не установлен или слишком короткий");
             postPutPostById.setErrors(errors);
             postPutPostById.setResult(false);
-        } else {
-            String[] tagsList;
-            tags.replaceAll(", ", ",");
-            tagsList = tags.split(",");
-            //Првоерка соответствия времени
-            if (time.before(new Date())) {
-                time = new Date();
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Задано прошедшее время.");
-            }
-
-            //Получаем пост из БД по id переданному из frontend
-            Posts post = postsRepository.findById(id).get();
-            post.setActive(active);
-            //Если пользователь модератор - то устанавливаем модератора посту, если нет, ставим посту статус NEW и ждм решения модератора
-            if (usersRepository.findById(userId).get().isModerator()) {
-                post.setModeratorId(userId);
+        }
+        else {
+            if (text.length() < textLength) {
+                errors.put("text", "Текст публикации слишком короткий");
+                postPutPostById.setErrors(errors);
+                postPutPostById.setResult(false);
             } else {
-                ModeratorStatus newPost;
-                newPost = ModeratorStatus.NEW;
-                post.setModerationStatus(newPost);
-            }
-            post.setText(text);
-            post.setTime(time);
-            post.setTitle(title);
-            int postId = postsRepository.save(post).getId();
-
-            //Поиск тегов, сохранение и получение их Id - при отладке вынести во внешний метод
-            Map<String, Integer> tagsNames = new HashMap<>();
-            for (Tags tag : tagsRepository.findAll()) {
-                tagsNames.put(tag.getName(), tag.getId());
-            }
-            //Проверка тегов на их наличие в БД, если нет - создание новых
-            ArrayList<Integer> tagsId = new ArrayList<>();
-            for (int i = 0; i < tagsList.length; i++) {
-                if (tagsNames.containsKey(tagsList[i].replaceAll(",", ""))) {
-                    tagsId.add(tagsNames.get(tagsList[i]));
-                } else {
-                    Tags newTag = new Tags();
-                    newTag.setName(tagsList[i]);
-                    tagsId.add(tagsRepository.save(newTag).getId());
+            /*String[] tagsList;
+            tags.replaceAll(", ", ",");
+            tagsList = tags.split(",");*/
+                //Првоерка соответствия времени
+                if (time.before(new Date())) {
+                    time = new Date();
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Задано прошедшее время.");
                 }
+
+                //Получаем пост из БД по id переданному из frontend
+                Posts post = postsRepository.findById(information.getId()).get();
+                post.setActive(active);
+                //Если пользователь модератор - то устанавливаем модератора посту, если нет, ставим посту статус NEW и ждм решения модератора
+                if (usersRepository.findById(userId).get().isModerator()) {
+                    post.setModeratorId(userId);
+                } else {
+                    ModeratorStatus newPost;
+                    newPost = ModeratorStatus.NEW;
+                    post.setModerationStatus(newPost);
+                }
+                post.setText(text);
+                post.setTime(time);
+                post.setTitle(title);
+                int postId = postsRepository.save(post).getId();
+
+                //Поиск тегов, сохранение и получение их Id - при отладке вынести во внешний метод
+                Map<String, Integer> tagsNames = new HashMap<>();
+                for (Tags tag : tagsRepository.findAll()) {
+                    tagsNames.put(tag.getName(), tag.getId());
+                }
+                //Проверка тегов на их наличие в БД, если нет - создание новых
+                ArrayList<Integer> tagsId = new ArrayList<>();
+                for (int i = 0; i < tags.size(); i++) {
+                    if (tagsNames.containsKey(tags.get(i).replaceAll(",", ""))) {
+                        tagsId.add(tagsNames.get(tags.get(i)));
+                    } else {//Если тегов нет в БД, то создаем новый тег
+                        Tags newTag = new Tags();
+                        newTag.setName(tags.get(i));
+                        tagsId.add(tagsRepository.save(newTag).getId());
+                    }
+                }
+                //Созжание связи между тегами и постом
+                tagsId.forEach(tagId -> {
+                    Tag2Post tag2Post = new Tag2Post();
+                    tag2Post.setTagId(tagId);
+                    tag2Post.setPostId(postId);
+                    tag2PostRepository.save(tag2Post);
+                });
+                postPutPostById.setResult(true);
             }
-            //Созжание связи между тегами и постом
-            tagsId.forEach(tagId -> {
-                Tag2Post tag2Post = new Tag2Post();
-                tag2Post.setTagId(tagId);
-                tag2Post.setPostId(postId);
-                tag2PostRepository.save(tag2Post);
-            });
-            postPutPostById.setResult(true);
         }
         return ResponseEntity.status(HttpStatus.OK).body(postPutPostById);
     }
@@ -699,13 +731,14 @@ public class PostService {
     //Метод формирования информации о постах
     public static Map <Object, Object> getPostInformation (Integer postId, PostsRepository postsRepository) {
         int annoncelength = 100;//Количество знаков в анонсе
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:MM");
 
         Map <Object, Object> mapForAnswer = new HashMap<>();
         Map <Object, Object> userMap = new HashMap<>();
 
         //Заполнение информации
         mapForAnswer.put("id", postId);
-        mapForAnswer.put("time", postsRepository.findById(postId).get().getTime().toString());
+        mapForAnswer.put("time", dateFormat.format(postsRepository.findById(postId).get().getTime()));
         userMap.put("id", postsRepository.findById(postId).get().getUser().getId());
         userMap.put("name", postsRepository.findById(postId).get().getUser().getName());
         mapForAnswer.put("user", userMap);
@@ -740,5 +773,7 @@ public class PostService {
 
         return mapForAnswer;
     }
+
 //---------------------------------------------------------------------------------------------------------------------
+
 }

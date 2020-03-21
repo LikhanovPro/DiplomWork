@@ -9,8 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
@@ -20,7 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
-public class GeneralService {
+public class GeneralService implements ResponseApi {
 
     //Подключаем репозитории
     @Autowired
@@ -48,7 +48,8 @@ public class GeneralService {
     String copyrightFrom = "2005";
     //=====================================================
 
-    int commentsLength = 2;//Минимальна длина коментария
+    @Autowired
+    WebProperties webProperties;
     //=====================================================
 
     public ResponseEntity generalInit () {
@@ -127,6 +128,7 @@ public class GeneralService {
     public ResponseEntity addComment (HttpServletRequest request, Integer parentId, int postId, String text) {
         GeneralPostComment generalPostComment = new GeneralPostComment();
         Map<String, String> errors = new HashMap<>();
+        int commentsLength = webProperties.getCommentsLength();//Минимальна длина коментария
 
         Integer userId = DefaultController.getIdUserLogin(request);
         //Проверка, что пользователь авторизован
@@ -135,6 +137,7 @@ public class GeneralService {
         }
 
         PostComments postComments = new PostComments();
+        postComments.setParentId(null);
         //Проверка: коментарий к посту или к коментарию
         if (parentId != null){
             if (postCommentsRepository.findById(parentId).isPresent()) {
@@ -210,7 +213,8 @@ public class GeneralService {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public String generalImage (HttpServletRequest request, String image){
+    public String generalImage (HttpServletRequest request, MultipartFile image){
+        System.out.println();
 
         Random random = new Random();//Случайности для генерации имен подпапок
         Integer userId = DefaultController.getIdUserLogin(request);//Получаем id текущего пользователя
@@ -219,9 +223,9 @@ public class GeneralService {
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
         String userName = usersRepository.findById(userId).get().getName(); //Получаем имя пользоателя, использовал для создания имен подпапок
         StringBuilder pathToFolderWithImage = new StringBuilder();
+        StringBuilder pathToImage = new StringBuilder();
         pathToFolderWithImage.append("src/main/resources/upload/");
         //Создадим дочерние подпапки из имени Юзера
         int maxLevelOfDirectory = 3; //Уровень конечной подпапки
@@ -230,18 +234,24 @@ public class GeneralService {
             pathToFolderWithImage.append(userName.charAt(random.nextInt(userName.length())));
             pathToFolderWithImage.append("/");
         }
-        pathToFolderWithImage.append(image);
-        File imageFile = new File(image); // Файл с картинкой, передан с frontend
+        File newFolder = new File (pathToFolderWithImage.toString());
+        if (!newFolder.exists()) {
+            System.out.println("Создаем папку");
+            newFolder.mkdirs();
+        }
+        pathToImage.append(pathToFolderWithImage).append("image.png");
+        //File imageFile = new File("image"); // Файл с картинкой, передан с frontend
         BufferedImage bi = null;
         //пересохраняем картинку в нашу подпапку
         try {
-            bi = ImageIO.read(imageFile); //Читаю файл с картинкой
-            ImageIO.write(bi, "png", new File(String.valueOf(pathToFolderWithImage))); //Записываю картинку в нашу подпапку с форматом png
+            bi = ImageIO.read(image.getInputStream()); //Читаю файл с картинкой
+
+            ImageIO.write(bi, "png", new File(String.valueOf(pathToImage))); //Записываю картинку в нашу подпапку с форматом png
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return pathToFolderWithImage.toString();
-    }
+        //Создаю относительный путь к файлу с картинкой
+        return pathToImage.toString().replaceAll("src/main/resources/", "../");}
 //---------------------------------------------------------------------------------------------------------------------
 
     public ResponseEntity generalMyStatistic (HttpServletRequest request) {
