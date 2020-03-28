@@ -13,9 +13,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
+import javax.swing.text.Document;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Blob;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -213,7 +215,7 @@ public class GeneralService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public String generalImage (HttpServletRequest request, MultipartFile image){
+    public String generalImage (HttpServletRequest request, MultipartFile image) {
         System.out.println();
 
         Random random = new Random();//Случайности для генерации имен подпапок
@@ -226,32 +228,36 @@ public class GeneralService implements ResponseApi {
         String userName = usersRepository.findById(userId).get().getName(); //Получаем имя пользоателя, использовал для создания имен подпапок
         StringBuilder pathToFolderWithImage = new StringBuilder();
         StringBuilder pathToImage = new StringBuilder();
-        pathToFolderWithImage.append("src/main/resources/upload/");
+        pathToFolderWithImage.append("src/main/resources/static/upload/");
         //Создадим дочерние подпапки из имени Юзера
         int maxLevelOfDirectory = 3; //Уровень конечной подпапки
         //Создаем путь к конечной подпапке
-        for (int i = 0; i < maxLevelOfDirectory; i ++) {
+        for (int i = 0; i < maxLevelOfDirectory; i++) {
             pathToFolderWithImage.append(userName.charAt(random.nextInt(userName.length())));
             pathToFolderWithImage.append("/");
         }
-        File newFolder = new File (pathToFolderWithImage.toString());
+        File newFolder = new File(pathToFolderWithImage.toString());
         if (!newFolder.exists()) {
             System.out.println("Создаем папку");
             newFolder.mkdirs();
         }
-        pathToImage.append(pathToFolderWithImage).append("image.png");
+        pathToImage.append(pathToFolderWithImage).append("image.jpg");
         //File imageFile = new File("image"); // Файл с картинкой, передан с frontend
         BufferedImage bi = null;
         //пересохраняем картинку в нашу подпапку
         try {
             bi = ImageIO.read(image.getInputStream()); //Читаю файл с картинкой
 
-            ImageIO.write(bi, "png", new File(String.valueOf(pathToImage))); //Записываю картинку в нашу подпапку с форматом png
+            ImageIO.write(bi, "jpg", new File(String.valueOf(pathToImage))); //Записываю картинку в нашу подпапку с форматом png
         } catch (IOException e) {
             e.printStackTrace();
         }
         //Создаю относительный путь к файлу с картинкой
-        return pathToImage.toString().replaceAll("src/main/resources/", "../");}
+
+        return "src/main/resources/upload/tiger.jpg";
+    }
+
+        //return pathToImage.toString().replaceAll("src/main/resources/", "");}
 //---------------------------------------------------------------------------------------------------------------------
 
     public ResponseEntity generalMyStatistic (HttpServletRequest request) {

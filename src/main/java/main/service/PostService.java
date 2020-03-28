@@ -179,13 +179,12 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity<Object> postById (int id) {
+    public ResponseEntity postById (int id) {
         PostGetById postGetById = new PostGetById();
         Map <Object, Object> user = new HashMap<>();
         ArrayList<Map> comments = new ArrayList<>();
         List<String> tags = new ArrayList<>();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:MM");
-
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         if (!postsRepository.findById(id).isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Пост с данным id не найден");
@@ -220,7 +219,7 @@ public class PostService implements ResponseApi {
                 Map <Object, Object> userComments = new HashMap<>();
                 Map <Object, Object> commentsMap = new HashMap<>();
                 commentsMap.put("id", comment.getId());
-                commentsMap.put("time", comment.getTime());
+                commentsMap.put("time", dateFormat.format(comment.getTime()));
                 userComments.put("id", comment.getUserForComments().getId());
                 userComments.put("name", comment.getUserForComments().getName());
                 userComments.put("photo", comment.getUserForComments().getPhoto());
@@ -233,6 +232,9 @@ public class PostService implements ResponseApi {
                 tags.add(tag.getName());
             });
             postGetById.setTags(tags);
+        }
+        else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Пост не активен или не опубликован");
         }
         return ResponseEntity.status(HttpStatus.OK).body(postGetById);
     }
@@ -418,7 +420,7 @@ public class PostService implements ResponseApi {
 
 
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:MM");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         Integer userId = DefaultController.getIdUserLogin(request);
         Date time = dateFormat.parse((information.getTime()).replaceAll("T", " "));//Дата передается со знаком "Т" ммежду датой и временем,убираю вручную
         boolean active;
@@ -506,7 +508,7 @@ public class PostService implements ResponseApi {
         int textLength = webProperties.getTextLength(); //Минлнимальное количество знаков текста поста
 
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:MM");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         Integer userId = DefaultController.getIdUserLogin(request);
         Date time = dateFormat.parse((information.getTime()).replaceAll("T", " "));//Дата передается со знаком "Т" ммежду датой и временем,убираю вручную
         boolean active = information.isActive();
@@ -590,7 +592,6 @@ public class PostService implements ResponseApi {
     public ResponseEntity postLike (HttpServletRequest request, PostPostLikeObject information) {
         PostPostLike postPostLike = new PostPostLike();
 
-
         Integer userId = DefaultController.getIdUserLogin(request);
         Integer postId = information.getPostId();
         //Проверка авторизации польлзователя
@@ -610,6 +611,7 @@ public class PostService implements ResponseApi {
                     postsVotesRepository.save(vote);
                     postPostLike.setResult(true);
                 }
+                return ResponseEntity.status(HttpStatus.OK).body(postPostLike);
             }
         }
         //Оценки поста данным пользователем не было, создаем новую оценку и связываем с постом
@@ -646,6 +648,7 @@ public class PostService implements ResponseApi {
                     postsVotesRepository.save(vote);
                     postPostDislike.setResult(true);
                 }
+                return ResponseEntity.status(HttpStatus.OK).body(postPostDislike);
             }
         }
         //Оценки поста данным пользователем не было, создаем новую оценку и связываем с постом
@@ -731,7 +734,7 @@ public class PostService implements ResponseApi {
     //Метод формирования информации о постах
     public static Map <Object, Object> getPostInformation (Integer postId, PostsRepository postsRepository) {
         int annoncelength = 100;//Количество знаков в анонсе
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:MM");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         Map <Object, Object> mapForAnswer = new HashMap<>();
         Map <Object, Object> userMap = new HashMap<>();
