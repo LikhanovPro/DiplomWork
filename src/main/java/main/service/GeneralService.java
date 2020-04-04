@@ -13,11 +13,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
-import javax.swing.text.Document;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.sql.Blob;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -241,8 +239,8 @@ public class GeneralService implements ResponseApi {
             System.out.println("Создаем папку");
             newFolder.mkdirs();
         }
-        pathToImage.append(pathToFolderWithImage).append("image.jpg");
-        //File imageFile = new File("image"); // Файл с картинкой, передан с frontend
+
+        pathToImage.append(pathToFolderWithImage).append(image.getOriginalFilename());
         BufferedImage bi = null;
         //пересохраняем картинку в нашу подпапку
         try {
@@ -252,12 +250,9 @@ public class GeneralService implements ResponseApi {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        //Создаю относительный путь к файлу с картинкой
 
-        return "src/main/resources/upload/tiger.jpg";
+        return pathToImage.toString().replaceAll("src", "api/post/src");
     }
-
-        //return pathToImage.toString().replaceAll("src/main/resources/", "");}
 //---------------------------------------------------------------------------------------------------------------------
 
     public ResponseEntity generalMyStatistic (HttpServletRequest request) {

@@ -9,12 +9,24 @@ import main.responseObject.*;
 import main.service.PostService;
 import main.service.ResponseApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ResourceLoaderAware;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.support.ServletContextResource;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
+
+
 
 @RestController
 @RequestMapping ("/api")
@@ -104,5 +116,15 @@ public class ApiPostController extends HttpServlet {
     public ResponseEntity<ResponseApi> getDislike (HttpServletRequest request,
                                       @RequestBody PostPostDislikeObject information) {
         return postService.postDislike(request, information);
+    }
+
+    //Контроллер возврата изображения
+    @RequestMapping(value = "/post/src/main/resources/static/upload/{level1}/{level2}/{level3}/{imageFile}", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<byte[]> getImageAsResource(@PathVariable String level1,
+                                                       @PathVariable String level2,
+                                                       @PathVariable String level3,
+                                                       @PathVariable String imageFile) throws IOException {
+        return postService.createImage(level1, level2, level3, imageFile);
     }
 }

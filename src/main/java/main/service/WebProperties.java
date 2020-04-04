@@ -13,6 +13,7 @@ public class WebProperties {
     Integer commentsLength;
     int lifeTime = 1;
     int codeLength = 6; //Минимальная длина кода (password)
+    String pathToImages = "src/main/resources/static/upload/";
 
     public Integer getTitleLength() {
         return titleLength;
@@ -52,5 +53,13 @@ public class WebProperties {
 
     public void setCodeLength(int codeLength) {
         this.codeLength = codeLength;
+    }
+
+    public String getPathToImages() {
+        return pathToImages;
+    }
+
+    public void setPathToImages(String pathToImages) {
+        this.pathToImages = pathToImages;
     }
 }

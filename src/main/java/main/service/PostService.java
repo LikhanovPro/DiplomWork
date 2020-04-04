@@ -8,11 +8,17 @@ import main.requestObject.PostPostLikeObject;
 import main.requestObject.PostPutPostByIdObject;
 import main.responseObject.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -37,6 +43,8 @@ public class PostService implements ResponseApi {
     private TagsRepository tagsRepository;
     @Autowired
     private UsersRepository usersRepository;
+    @Autowired
+    ResourceLoader resourceLoader;
     //==========================================
 
     @Autowired
@@ -661,6 +669,19 @@ public class PostService implements ResponseApi {
         postPostDislike.setResult(true);
         return ResponseEntity.status(HttpStatus.OK).body(postPostDislike);
     }
+//---------------------------------------------------------------------------------------------------------------------
+    public ResponseEntity<byte[]> createImage (String level1, String level2, String level3, String imageFile) throws IOException {
+
+        File file = new File(webProperties.getPathToImages() + level1 + "/" + level2 +
+                "/" + level3 + "/" + imageFile);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG);
+        byte[] med = Files.readAllBytes(file.toPath());
+        ResponseEntity<byte[]> image = new ResponseEntity<>(med, headers, HttpStatus.OK);
+
+        return image;
+    }
+
 
 //---------------------------------------------------------------------------------------------------------------------
     //Формирование информации о посте для личного списка постов
@@ -702,6 +723,9 @@ public class PostService implements ResponseApi {
         mapForAnswer.put("viewCount", post.getViewCount());
         return mapForAnswer;
     }
+//---------------------------------------------------------------------------------------------------------------------
+
+
 
 //---------------------------------------------------------------------------------------------------------------------
     private static Map <Object, Object> getPostInformationForModeration (Posts post) {
@@ -728,6 +752,8 @@ public class PostService implements ResponseApi {
 
         return mapForAnswer;
     }
+
+
 
 //---------------------------------------------------------------------------------------------------------------------
 
