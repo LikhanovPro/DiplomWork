@@ -2,15 +2,11 @@ package main.requestObject;
 
 public class GeneralPostMProfileObject {
 
-    String photo;
     boolean removePhoto;
     String name;
-    String eMail;
+    String email;
     String password;
 
-    public String getPhoto() {
-        return photo;
-    }
 
     public boolean isRemovePhoto() {
         return removePhoto;
@@ -21,15 +17,11 @@ public class GeneralPostMProfileObject {
     }
 
     public String geteMail() {
-        return eMail;
+        return email;
     }
 
     public String getPassword() {
         return password;
-    }
-
-    public void setPhoto(String photo) {
-        this.photo = photo;
     }
 
     public void setRemovePhoto(boolean removePhoto) {
@@ -40,11 +32,22 @@ public class GeneralPostMProfileObject {
         this.name = name;
     }
 
-    public void seteMail(String eMail) {
-        this.eMail = eMail;
-    }
-
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public GeneralPostMProfileObject(String name, String email) {
+
+        this.name = name;
+        this.email = email;
+
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

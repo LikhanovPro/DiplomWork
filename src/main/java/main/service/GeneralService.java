@@ -6,16 +6,20 @@ import main.requestObject.GeneralPostMProfileObject;
 import main.requestObject.GeneralPostModerationObject;
 import main.responseObject.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -390,39 +394,117 @@ public class GeneralService implements ResponseApi {
        return ResponseEntity.status(HttpStatus.OK).body(generalPutSetting);
     }
 //---------------------------------------------------------------------------------------------------------------------
-
-    public ResponseEntity generalMyProfile (HttpServletRequest request, GeneralPostMProfileObject information) {
+    public ResponseEntity generalMyProfileWithoutAvatar (HttpServletRequest request, GeneralPostMProfileObject information) {
         GeneralPostMyProfile generalPostMyProfile = new GeneralPostMyProfile();
 
         Integer userId = DefaultController.getIdUserLogin(request);
-
-        //Извлечение информации из Json файла, переданного с frontend
-        String photo =information.getPhoto();
-        boolean removePhoto = information.isRemovePhoto();
-        String name = information.getName();
-        String eMail = information.geteMail();
-        String password = information.getPassword();
 
         //Проверка авторизации пользователя
         if (userId == null){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
         else {
-            Users user = usersRepository.findById(userId).get();
-            if (!photo.isEmpty()) {//Проверка установки фотографии
-                user.setPhoto(photo);
+            //Сохранение изменений профиля без аватарки
+            boolean removePhoto = information.isRemovePhoto();
+            String name = information.getName();
+            String eMail = information.geteMail();
+            String password = information.getPassword();
+
+                Users user = usersRepository.findById(userId).get();
+                if (removePhoto) {//Проверка необходимости удалить фотографию
+                    user.setPhoto(null);
+                }
+                //Сохранение информации о пользователе
+                user.setName(name);
+                user.seteMail(eMail);
+                if (password == null) {
+                    password = user.getPassword();
+                }
+                else {
+                    user.setPassword(password);
+                }
+                usersRepository.save(user);
+                generalPostMyProfile.setResult(true);
             }
-            if (removePhoto) {//Проверка необходимости удалить фотографию
+        return ResponseEntity.status(HttpStatus.OK).body(generalPostMyProfile);
+    }
+
+//---------------------------------------------------------------------------------------------------------------------
+    public ResponseEntity generalMyProfileWithAvatar (HttpServletRequest request, MultipartFile avatarFile, String removePhoto,
+                                                      String name, String email, String password) {
+        GeneralPostMyProfile generalPostMyProfile = new GeneralPostMyProfile();
+
+        Integer userId = DefaultController.getIdUserLogin(request);
+        if (userId == null){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+        }
+        else {
+            Users user = usersRepository.findById(userId).get();
+            boolean needRemovePhoto = Boolean.parseBoolean(removePhoto);
+            if (needRemovePhoto) {//Проверка необходимости удалить фотографию
                 user.setPhoto(null);
+            }
+            else {
+                user.setPhoto(avatarFile.getOriginalFilename());
+                //Копируем аваьарку в БД
+                StringBuilder pathToFolderWithImage = new StringBuilder();
+                StringBuilder pathToImage = new StringBuilder();
+                pathToFolderWithImage.append("src/main/resources/static/img/avatars/");
+                //Создадим дочернюю подпапку из индекса Юзера, т.к. он уникален
+                pathToFolderWithImage.append(user.getId() + "/");
+                File newFolder = new File(pathToFolderWithImage.toString());
+                if (!newFolder.exists()) {
+                    System.out.println("Создаем папку");
+                    newFolder.mkdirs();
+                }
+
+                pathToImage.append(pathToFolderWithImage).append(avatarFile.getOriginalFilename());
+                BufferedImage bi = null;
+                //пересохраняем картинку в нашу подпапку
+                try {
+                    bi = ImageIO.read(avatarFile.getInputStream()); //Читаю файл с картинкой
+                    ImageIO.write(bi, "jpg", new File(String.valueOf(pathToImage))); //Записываю картинку в нашу подпапку с форматом jpg
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             //Сохранение информации о пользователе
             user.setName(name);
-            user.seteMail(eMail);
-            user.setPassword(password);
+            user.seteMail(email);
+            if (password == null) {
+                password = user.getPassword();
+            }
+            else {
+                user.setPassword(password);
+            }
             usersRepository.save(user);
             generalPostMyProfile.setResult(true);
         }
         return ResponseEntity.status(HttpStatus.OK).body(generalPostMyProfile);
     }
+//---------------------------------------------------------------------------------------------------------------------
+    public ResponseEntity<byte[]> getUserAvatar (HttpServletRequest request, String avatarImage) throws IOException {
+
+        Integer userId = DefaultController.getIdUserLogin(request);
+        if (userId == null){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+        }
+        File file;
+        System.out.println(avatarImage);
+        if (!avatarImage.equals("null")){
+            file = new File(webProperties.getPathToAvatars() + userId + "/" + avatarImage);
+        }
+        else {
+            file = new File(webProperties.getDefaultAvatar());
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG);
+        byte[] med = Files.readAllBytes(file.toPath());
+        ResponseEntity<byte[]> avatar = new ResponseEntity<>(med, headers, HttpStatus.OK);
+
+        return avatar;
+    }
+
 }

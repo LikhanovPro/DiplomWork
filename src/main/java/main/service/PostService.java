@@ -682,7 +682,6 @@ public class PostService implements ResponseApi {
         return image;
     }
 
-
 //---------------------------------------------------------------------------------------------------------------------
     //Формирование информации о посте для личного списка постов
     private static Map <Object, Object> getMyPostInformation (Posts post) {

@@ -339,7 +339,7 @@ public class AuthService implements ResponseApi {
         Map <Object, Object> userInformation = new HashMap<>();
         userInformation.put("id", user.getId());
         userInformation.put("name", user.getName());
-        userInformation.put("photo", user.getPhoto());
+
         userInformation.put("email", user.geteMail());
         userInformation.put("moderation", user.isModerator());
 
@@ -357,6 +357,14 @@ public class AuthService implements ResponseApi {
         userInformation.put("moderationCount", moderationCount);
         userInformation.put("settings", user.isModerator());
 
+        userInformation.put("photo", user.getPhoto());
+
+        /*if (user.getPhoto() == null){
+            userInformation.put("photo", "static/img/default.jpg");
+        }
+        else {
+
+        }*/
 
         return userInformation;
     };

@@ -1,16 +1,21 @@
 package main.controller;
 
+import jdk.jfr.ContentType;
 import main.requestObject.GeneralPostMProfileObject;
 import main.requestObject.GeneralPostModerationObject;
 import main.service.GeneralService;
 import main.service.ResponseApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.mail.Multipart;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.util.ArrayList;
 
 @RestController
 public class ApiGeneralController {
@@ -82,12 +87,30 @@ public class ApiGeneralController {
         return generalService.generalPutSetting(request);
     }
 
-    //Контроллер установки порфиля
-    @PostMapping("api/profile/my")
-    public ResponseEntity<ResponseApi> editProfile (HttpServletRequest request,
-                               @RequestBody GeneralPostMProfileObject information) {
-        return generalService.generalMyProfile(request, information);
+    @RequestMapping (value = "api/profile/my", method = RequestMethod.POST, consumes = {"application/json"})
+    public ResponseEntity<ResponseApi> editProfileWithoutImage (HttpServletRequest request, @RequestBody GeneralPostMProfileObject info) {
+
+        return generalService.generalMyProfileWithoutAvatar(request, info);
     }
+
+    @RequestMapping (value = "api/profile/my", method = RequestMethod.POST, consumes = {"multipart/form-data"})
+    public ResponseEntity<ResponseApi> editProfileWithImage (HttpServletRequest request,
+                                                             MultipartFile photo, String removePhoto, String name, String email, String password) {
+        return generalService.generalMyProfileWithAvatar(request, photo, removePhoto, name, email, password);
+    }
+
+    @GetMapping ("posts/{avatarImage}")
+    public ResponseEntity<byte[]> getUserAvatar (HttpServletRequest request, @PathVariable String avatarImage) throws IOException {
+
+        return generalService.getUserAvatar(request, avatarImage);
+    }
+
+    @GetMapping ("{avatarImage}")
+    public ResponseEntity<byte[]> getUserAvatarForProfile (HttpServletRequest request, @PathVariable String avatarImage) throws IOException {
+
+        return generalService.getUserAvatar(request, avatarImage);
+    }
+
 }
 
 
