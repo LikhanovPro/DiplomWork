@@ -2,8 +2,7 @@ package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class GeneralGetMyStatistic {
-
+public class GeneralGetMyStatistic implements ResponseApi {
 
     @JsonProperty
     int postsCount;

@@ -37,10 +37,8 @@ public class GeneralPostMProfileObject {
     }
 
     public GeneralPostMProfileObject(String name, String email) {
-
         this.name = name;
         this.email = email;
-
     }
 
     public String getEmail() {

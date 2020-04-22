@@ -1,7 +1,6 @@
 package main.requestObject;
 
 public class AuthPostPasswordObject {
-
     String code;
     String password;
     String captcha;//Captcha код, который ввел пользователь

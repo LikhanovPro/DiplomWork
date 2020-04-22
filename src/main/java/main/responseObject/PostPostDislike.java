@@ -2,7 +2,7 @@ package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class PostPostDislike {
+public class PostPostDislike implements ResponseApi {
 
     @JsonProperty
     boolean result;

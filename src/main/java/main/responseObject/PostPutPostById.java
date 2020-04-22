@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PostPutPostById {
+public class PostPutPostById implements ResponseApi {
 
     @JsonProperty
     boolean result;

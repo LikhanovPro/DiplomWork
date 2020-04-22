@@ -2,7 +2,7 @@ package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class GeneralGetInit {
+public class GeneralGetInit implements ResponseApi {
 
     @JsonProperty
     String title;

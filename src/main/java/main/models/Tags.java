@@ -21,7 +21,6 @@ public class Tags {
     private List<Posts> postsForTags;
 
     //===============================================================================================
-
     public int getId() {
         return id;
     }

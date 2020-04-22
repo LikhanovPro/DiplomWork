@@ -2,10 +2,7 @@ package main.models;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 
 @Entity
 @Table (name = "users")
@@ -42,7 +39,6 @@ public class Users {
 
     @OneToMany (cascade = CascadeType.ALL, mappedBy = "userId")
     private List <PostsVotes> userVotes;
-
 
     //====================================================================================================
 

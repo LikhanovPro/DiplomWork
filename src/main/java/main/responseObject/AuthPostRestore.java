@@ -2,7 +2,7 @@ package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class AuthPostRestore {
+public class AuthPostRestore implements ResponseApi {
 
     @JsonProperty
     boolean result;

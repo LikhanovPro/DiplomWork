@@ -1,6 +1,5 @@
 package main.models;
 
-
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;

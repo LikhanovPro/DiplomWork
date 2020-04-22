@@ -2,7 +2,7 @@ package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class AuthGetCaptcha {
+public class AuthGetCaptcha implements ResponseApi {
 
     @JsonProperty
     String secret;

@@ -1,11 +1,11 @@
 package main.service;
 
-import main.controller.DefaultController;
 import main.models.*;
 import main.requestObject.GeneralPostMProfileObject;
 import main.requestObject.GeneralPostModerationObject;
 import main.responseObject.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
@@ -24,7 +23,30 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
-public class GeneralService implements ResponseApi {
+public class GeneralService {
+
+    @Value("${diplomawork.commentsLength}")
+    int commentsLength;
+    @Value("${diplomawork.pathToImages}")
+    String pathToImages;
+    @Value("${diplomawork.pathToAvatars}")
+    String pathToAvatars;
+    @Value("${diplomawork.pathToDefaultAvatar}")
+    String pathToDefaultAvatar;
+    @Value("${diploma.dateformat.calendar}")
+    String dateFormatCalendar;
+    @Value("${diploma.dateformat.year}")
+    String dateFormatYear;
+    @Value("${diploma.dateformat.post}")
+    String dateFormatPost;
+    @Value("${diploma.db.idStatisticsIsPublic}")
+    int idStatisticsIsPublic;
+    @Value("${diploma.db.idPostPreModeration}")
+    int idPostPreModeration;
+    @Value("${diploma.db.idMultiUserMode}")
+    int idMultiUserMode;
+    @Value("${diploma.maxLevelOfDirectoryToImage}")
+    int maxLevelOfDirectory;
 
     //Подключаем репозитории
     @Autowired
@@ -41,24 +63,27 @@ public class GeneralService implements ResponseApi {
 
     @Autowired
     private GlobalSettingRepository globalSettingRepository;
-    //=====================================================
-
-    //Информация о разработчеке сайта
-    String title = "DevPub";
-    String subtitle = "Рассказы разработчиков";
-    String phone = "+7 903 666-44-55";
-    String email = "mail@mail.ru";
-    String copyright = "Дмитрий Сергеевич";
-    String copyrightFrom = "2005";
-    //=====================================================
 
     @Autowired
-    WebProperties webProperties;
+    private SessionInformation sessionInformation;
+    //=====================================================
+    //Информация о разработчеке сайта
+    @Value("${diplomawork.iformationaboutsite.title}")
+    String title = "DevPub";
+    @Value("${diplomawork.iformationaboutsite.subtitle}")
+    String subtitle = "Рассказы разработчиков";
+    @Value("${diplomawork.iformationaboutsite.phone}")
+    String phone = "+7 903 666-44-55";
+    @Value("${diplomawork.iformationaboutsite.email}")
+    String email = "mail@mail.ru";
+    @Value("${diplomawork.iformationaboutsite.copyright}")
+    String copyright = "Дмитрий Сергеевич";
+    @Value("${diplomawork.iformationaboutsite.copyrightFrom}")
+    String copyrightFrom = "2005";
     //=====================================================
 
     public ResponseEntity generalInit () {
         GeneralGetInit generalGetInit = new GeneralGetInit();
-
         generalGetInit.setTitle(title);
         generalGetInit.setSubtitle(subtitle);
         generalGetInit.setPhone(phone);
@@ -69,48 +94,43 @@ public class GeneralService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity generalTags () {
+    public ResponseEntity <ResponseApi> generalTags () {
         GeneralGetTag generalGetTag = new GeneralGetTag();
-
-    Map<String, Integer> tagCount = new HashMap<>();
-    Set<Integer> tagCounts = new TreeSet<>();
-    ArrayList<Map> tags = new ArrayList<Map>();
-
-    //Считаем количество тегов вообще и сколь раз он встречается в постах
-    tagsRepository.findAll().forEach(tag -> {
-        int i = 0;
-        for (Posts post : tag.getPostsForTags()) {
-            if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")) {
-                i++;
+        Map<String, Integer> tagCount = new HashMap<>();
+        Set<Integer> tagCounts = new TreeSet<>();
+        ArrayList<Map> tags = new ArrayList<Map>();
+        //Считаем количество тегов и сколько раз он встречается в постах
+        tagsRepository.findAll().forEach(tag -> {
+            int i = 0;
+            for (Posts post : tag.getPostsForTags()) {
+                if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")) {
+                    i++;
+                }
             }
-        }
-        tagCounts.add(i);
-        tagCount.put(tag.getName(), i);
-    });
-    tagsRepository.findAll().forEach(tag -> {
-        Map <Object, Object> tagWeight = new HashMap<>();
-        tagWeight.put("name", tag.getName());
-        tagWeight.put("weight", (double) tagCount.get(tag.getName())/tagCounts.stream().max(Integer::compareTo).get());//Считаем весса тегов
-        tags.add(tagWeight);
-    });
-    generalGetTag.setTags(tags);
-        return ResponseEntity.status(HttpStatus.OK).body(generalGetTag);
-}
+            tagCounts.add(i);
+            tagCount.put(tag.getName(), i);
+        });
+        tagsRepository.findAll().forEach(tag -> {
+            Map <Object, Object> tagWeight = new HashMap<>();
+            tagWeight.put("name", tag.getName());
+            tagWeight.put("weight", (double) tagCount.get(tag.getName())/tagCounts.stream().max(Integer::compareTo).get());//Считаем веса тегов
+            tags.add(tagWeight);
+        });
+        generalGetTag.setTags(tags);
+            return ResponseEntity.status(HttpStatus.OK).body(generalGetTag);
+    }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity generalGetCalendar (String year) {
+    public ResponseEntity <ResponseApi> generalGetCalendar (String year) {
         GeneralGetCalendar generalGetCalendar = new GeneralGetCalendar();
         Set<Integer> years = new TreeSet<>();
         Map <Object, Integer> posts = new HashMap<>();
-
-        SimpleDateFormat dateFormatForYear = new SimpleDateFormat("yyyy");
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
+        SimpleDateFormat dateFormatForYear = new SimpleDateFormat(dateFormatYear);
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatCalendar);
         if (year.length() != 4 || year.isEmpty()) {
             year = dateFormat.format(new Date());
         }
         years.add(Integer.parseInt(year));
-
         postsRepository.findAll().forEach(post -> {
             if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")) {
                 years.add(Integer.parseInt(dateFormatForYear.format(post.getTime())));
@@ -129,17 +149,14 @@ public class GeneralService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity addComment (HttpServletRequest request, Integer parentId, int postId, String text) {
+    public ResponseEntity <ResponseApi> addComment (HttpServletRequest request, Integer parentId, int postId, String text) {
         GeneralPostComment generalPostComment = new GeneralPostComment();
         Map<String, String> errors = new HashMap<>();
-        int commentsLength = webProperties.getCommentsLength();//Минимальна длина коментария
-
-        Integer userId = DefaultController.getIdUserLogin(request);
+        Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка, что пользователь авторизован
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
         PostComments postComments = new PostComments();
         postComments.setParentId(null);
         //Проверка: коментарий к посту или к коментарию
@@ -151,51 +168,41 @@ public class GeneralService implements ResponseApi {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Соответствующий коментарий не существует.");
             }
         }
-
         //Проверка существования поста, к которому передаются коментарии
         if (!postsRepository.findById(postId).isPresent()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Соответствующий пост не существует.");
         }
-
         //Проверка длины коментария
         if (text.length() < commentsLength || text.isEmpty()) {
             generalPostComment.setResult(false);
             errors.put("text", "Текст комментария не задан или слишком короткий");
             generalPostComment.setErrors(errors);
         }
-
         //Заполняем объект коментария информацией
         postComments.setPostId(postId);
         postComments.setUserId(userId);
         postComments.setTime(new Date());
         postComments.setComment(text);
-
         generalPostComment.setResult(true);
         //Сохраняем коментарий в БД, получая его id, который будет автоматически создан
         generalPostComment.setId(postCommentsRepository.save(postComments).getId()); //Заполняем json для возрата на frontend
-
         return ResponseEntity.status(HttpStatus.OK).body(generalPostComment);
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity generalModeration (HttpServletRequest request, GeneralPostModerationObject information) {
+    public ResponseEntity <ResponseApi> generalModeration (HttpServletRequest request, GeneralPostModerationObject information) {
         GeneralPostModeration generalPostModeration = new GeneralPostModeration();
-
         ModeratorStatus status;
         //Получаем id текущего пользователя
-        Integer userId = DefaultController.getIdUserLogin(request);
-
+        Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка авторизации
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
         Integer postId = information.getPostId();
         //решение модератора к посту
         String newStatus = information.getNewStatus();
-
         Posts post = postsRepository.findById(postId).get();
-
         if (usersRepository.findById(userId).get().isModerator()){//Проверка, что авторизованный пользователь - модератор
             if (newStatus.equals("accept")) {//новый статус поста
                 status = ModeratorStatus.valueOf("ACCEPTED");
@@ -208,7 +215,6 @@ public class GeneralService implements ResponseApi {
             post.setModeratorId(userId);//сохраняем id модераторра
             postsRepository.save(post);
             generalPostModeration.setResult(true);
-
         }
         else {
             generalPostModeration.setResult(false);
@@ -218,11 +224,8 @@ public class GeneralService implements ResponseApi {
 //---------------------------------------------------------------------------------------------------------------------
 
     public String generalImage (HttpServletRequest request, MultipartFile image) {
-        System.out.println();
-
         Random random = new Random();//Случайности для генерации имен подпапок
-        Integer userId = DefaultController.getIdUserLogin(request);//Получаем id текущего пользователя
-
+        Integer userId = sessionInformation.getIdUserLogin(request);//Получаем id текущего пользователя
         //Проверяем, что пользователь авторизован
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
@@ -230,40 +233,38 @@ public class GeneralService implements ResponseApi {
         String userName = usersRepository.findById(userId).get().getName(); //Получаем имя пользоателя, использовал для создания имен подпапок
         StringBuilder pathToFolderWithImage = new StringBuilder();
         StringBuilder pathToImage = new StringBuilder();
-        pathToFolderWithImage.append("src/main/resources/static/upload/");
-        //Создадим дочерние подпапки из имени Юзера
-        int maxLevelOfDirectory = 3; //Уровень конечной подпапки
+        pathToFolderWithImage.append(pathToImages);
         //Создаем путь к конечной подпапке
+        StringBuilder pathToImageForResponse = new StringBuilder();
+        pathToImageForResponse.append(pathToImages);
         for (int i = 0; i < maxLevelOfDirectory; i++) {
-            pathToFolderWithImage.append(userName.charAt(random.nextInt(userName.length())));
-            pathToFolderWithImage.append("/");
+            char pathPart = userName.charAt(random.nextInt(userName.length()));
+            pathToFolderWithImage.append(pathPart);
+            pathToFolderWithImage.append(File.separator);
+            pathToImageForResponse.append(pathPart).append("-");
         }
         File newFolder = new File(pathToFolderWithImage.toString());
         if (!newFolder.exists()) {
-            System.out.println("Создаем папку");
             newFolder.mkdirs();
         }
-
+        pathToImageForResponse.append(image.getOriginalFilename());
         pathToImage.append(pathToFolderWithImage).append(image.getOriginalFilename());
         BufferedImage bi = null;
-        //пересохраняем картинку в нашу подпапку
+        //Сохраняем картинку в нашу подпапку
         try {
             bi = ImageIO.read(image.getInputStream()); //Читаю файл с картинкой
-
             ImageIO.write(bi, "jpg", new File(String.valueOf(pathToImage))); //Записываю картинку в нашу подпапку с форматом png
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        return pathToImage.toString().replaceAll("src", "api/post/src");
+        return pathToImageForResponse.toString().replaceAll(pathToImages, "api/");
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity generalMyStatistic (HttpServletRequest request) {
+    public ResponseEntity <ResponseApi> generalMyStatistic (HttpServletRequest request) {
         GeneralGetMyStatistic generalGetMyStatistic = new GeneralGetMyStatistic();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-
-        Integer userId = DefaultController.getIdUserLogin(request);//Получаем id пользователя
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPost); //Перенести в настройки, взять от туда
+        Integer userId = sessionInformation.getIdUserLogin(request);//Получаем id пользователя
         //Проверяем, что пользователь авторизован
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
@@ -271,7 +272,6 @@ public class GeneralService implements ResponseApi {
         //Ищем пользователя в БД
         Users user = usersRepository.findById(userId).get();
         List<Posts> posts = user.getUserPosts();//Получаем перечень постов авторизованного пользователя
-
         //Получем статистику авторизованного пользователя
         generalGetMyStatistic.setPostsCount(posts.size());
         int likesCount = 0;
@@ -291,26 +291,20 @@ public class GeneralService implements ResponseApi {
                     dislikesCount++;
                 }
             }
-
         }
         generalGetMyStatistic.setLikesCount(likesCount);
         generalGetMyStatistic.setDislikesCount(dislikesCount);
         generalGetMyStatistic.setViewsCount(viewsCount);
         generalGetMyStatistic.setFirstPublication(dateFormat.format(date));
-
         return ResponseEntity.status(HttpStatus.OK).body(generalGetMyStatistic);
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity generalAllStatistic (HttpServletRequest request) {
+    public ResponseEntity <ResponseApi> generalAllStatistic (HttpServletRequest request) {
         GeneralGetAllStatistic generalGetAllStatistic = new GeneralGetAllStatistic();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-
-        Integer userId = null;
-        userId = DefaultController.getIdUserLogin(request);
-
-        int idStatisticsIsPublic = 3;//Номер id информации из БД, где указывает о доступе общей статистики неавторизованному пользователю
-
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPost);
+        Integer userId;
+        userId = sessionInformation.getIdUserLogin(request);
         //Проверка выполнения условий вывода информации по сайту
         if (!globalSettingRepository.findById(idStatisticsIsPublic).get().getValue() && userId.equals(null)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
@@ -349,20 +343,15 @@ public class GeneralService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity generalGetSetting (HttpServletRequest request) {
+    public ResponseEntity <ResponseApi> generalGetSetting (HttpServletRequest request) {
         GeneralGetSetting generalGetSetting = new GeneralGetSetting();
-
-        int idMULTIUSER_MODE = 1;
-        int idPOST_PREMODERATION = 2;
-        int idSTATISTICS_IS_PUBLIC = 3;
-        Integer userId = DefaultController.getIdUserLogin(request);
-
+        Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка, что пользователь авторизован
         if (!(userId == null)) {
             if (usersRepository.findById(userId).get().isModerator()) {
-                generalGetSetting.setMULTIUSER_MODE(globalSettingRepository.findById(idMULTIUSER_MODE).get().getValue());
-                generalGetSetting.setPOST_PREMODERATION(globalSettingRepository.findById(idPOST_PREMODERATION).get().getValue());
-                generalGetSetting.setSTATISTICS_IS_PUBLIC(globalSettingRepository.findById(idSTATISTICS_IS_PUBLIC).get().getValue());
+                generalGetSetting.setMULTIUSER_MODE(globalSettingRepository.findById(idMultiUserMode).get().getValue());
+                generalGetSetting.setPOST_PREMODERATION(globalSettingRepository.findById(idPostPreModeration).get().getValue());
+                generalGetSetting.setSTATISTICS_IS_PUBLIC(globalSettingRepository.findById(idStatisticsIsPublic).get().getValue());
             }
         }
         else {
@@ -372,20 +361,15 @@ public class GeneralService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity generalPutSetting (HttpServletRequest request) {
+    public ResponseEntity <ResponseApi> generalPutSetting (HttpServletRequest request) {
         GeneralPutSetting generalPutSetting = new GeneralPutSetting();
-
-        int idMULTIUSER_MODE = 1;
-        int idPOST_PREMODERATION = 2;
-        int idSTATISTICS_IS_PUBLIC = 3;
-        Integer userId = DefaultController.getIdUserLogin(request);
-
+        Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка, что пользователь авторизован
         if (!(userId == null)) {
             if (usersRepository.findById(userId).get().isModerator()) {
-                generalPutSetting.setMULTIUSER_MODE(globalSettingRepository.findById(idMULTIUSER_MODE).get().getValue());
-                generalPutSetting.setPOST_PREMODERATION(globalSettingRepository.findById(idPOST_PREMODERATION).get().getValue());
-                generalPutSetting.setSTATISTICS_IS_PUBLIC(globalSettingRepository.findById(idSTATISTICS_IS_PUBLIC).get().getValue());
+                generalPutSetting.setMULTIUSER_MODE(globalSettingRepository.findById(idMultiUserMode).get().getValue());
+                generalPutSetting.setPOST_PREMODERATION(globalSettingRepository.findById(idPostPreModeration).get().getValue());
+                generalPutSetting.setSTATISTICS_IS_PUBLIC(globalSettingRepository.findById(idStatisticsIsPublic).get().getValue());
             }
         }
         else {
@@ -394,11 +378,10 @@ public class GeneralService implements ResponseApi {
        return ResponseEntity.status(HttpStatus.OK).body(generalPutSetting);
     }
 //---------------------------------------------------------------------------------------------------------------------
-    public ResponseEntity generalMyProfileWithoutAvatar (HttpServletRequest request, GeneralPostMProfileObject information) {
+
+    public ResponseEntity <ResponseApi> generalMyProfileWithoutAvatar (HttpServletRequest request, GeneralPostMProfileObject information) {
         GeneralPostMyProfile generalPostMyProfile = new GeneralPostMyProfile();
-
-        Integer userId = DefaultController.getIdUserLogin(request);
-
+        Integer userId = sessionInformation.getIdUserLogin(request);//Убрать зависимость с контроллером
         //Проверка авторизации пользователя
         if (userId == null){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
@@ -409,7 +392,6 @@ public class GeneralService implements ResponseApi {
             String name = information.getName();
             String eMail = information.geteMail();
             String password = information.getPassword();
-
                 Users user = usersRepository.findById(userId).get();
                 if (removePhoto) {//Проверка необходимости удалить фотографию
                     user.setPhoto(null);
@@ -428,13 +410,12 @@ public class GeneralService implements ResponseApi {
             }
         return ResponseEntity.status(HttpStatus.OK).body(generalPostMyProfile);
     }
-
 //---------------------------------------------------------------------------------------------------------------------
-    public ResponseEntity generalMyProfileWithAvatar (HttpServletRequest request, MultipartFile avatarFile, String removePhoto,
+
+    public ResponseEntity <ResponseApi> generalMyProfileWithAvatar (HttpServletRequest request, MultipartFile avatarFile, String removePhoto,
                                                       String name, String email, String password) {
         GeneralPostMyProfile generalPostMyProfile = new GeneralPostMyProfile();
-
-        Integer userId = DefaultController.getIdUserLogin(request);
+        Integer userId = sessionInformation.getIdUserLogin(request);//Убрать взаимосвязь с контроллером
         if (userId == null){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
@@ -446,29 +427,26 @@ public class GeneralService implements ResponseApi {
             }
             else {
                 user.setPhoto(avatarFile.getOriginalFilename());
-                //Копируем аваьарку в БД
+                //Копируем аватарку в БД
                 StringBuilder pathToFolderWithImage = new StringBuilder();
                 StringBuilder pathToImage = new StringBuilder();
-                pathToFolderWithImage.append("src/main/resources/static/img/avatars/");
+                pathToFolderWithImage.append(pathToAvatars);
                 //Создадим дочернюю подпапку из индекса Юзера, т.к. он уникален
-                pathToFolderWithImage.append(user.getId() + "/");
+                pathToFolderWithImage.append(user.getId() + File.separator);
                 File newFolder = new File(pathToFolderWithImage.toString());
                 if (!newFolder.exists()) {
                     System.out.println("Создаем папку");
                     newFolder.mkdirs();
                 }
-
                 pathToImage.append(pathToFolderWithImage).append(avatarFile.getOriginalFilename());
-                BufferedImage bi = null;
-                //пересохраняем картинку в нашу подпапку
+                BufferedImage bi;
                 try {
                     bi = ImageIO.read(avatarFile.getInputStream()); //Читаю файл с картинкой
-                    ImageIO.write(bi, "jpg", new File(String.valueOf(pathToImage))); //Записываю картинку в нашу подпапку с форматом jpg
+                    ImageIO.write(bi, "jpg", new File(String.valueOf(pathToImage)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-
             //Сохранение информации о пользователе
             user.setName(name);
             user.seteMail(email);
@@ -484,27 +462,22 @@ public class GeneralService implements ResponseApi {
         return ResponseEntity.status(HttpStatus.OK).body(generalPostMyProfile);
     }
 //---------------------------------------------------------------------------------------------------------------------
-    public ResponseEntity<byte[]> getUserAvatar (HttpServletRequest request, String avatarImage) throws IOException {
 
-        Integer userId = DefaultController.getIdUserLogin(request);
+    public ResponseEntity<byte[]> getUserAvatar (HttpServletRequest request, String avatarImage) throws IOException {
+        Integer userId = sessionInformation.getIdUserLogin(request);
         if (userId == null){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
         File file;
-        System.out.println(avatarImage);
         if (!avatarImage.equals("null")){
-            file = new File(webProperties.getPathToAvatars() + userId + "/" + avatarImage);
+            file = new File(pathToAvatars + userId + File.separator + avatarImage);
         }
         else {
-            file = new File(webProperties.getDefaultAvatar());
+            file = new File(pathToDefaultAvatar);
         }
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         byte[] med = Files.readAllBytes(file.toPath());
-        ResponseEntity<byte[]> avatar = new ResponseEntity<>(med, headers, HttpStatus.OK);
-
-        return avatar;
+        return new ResponseEntity<>(med, headers, HttpStatus.OK);
     }
-
 }

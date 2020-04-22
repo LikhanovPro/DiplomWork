@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Map;
 
-
-   public class AuthPostLogIn {
+   public class AuthPostLogIn implements ResponseApi {
 
        @JsonProperty
        boolean result;

@@ -2,7 +2,7 @@ package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class AuthGetLogOut {
+public class AuthGetLogOut implements ResponseApi {
 
     @JsonProperty
     boolean result;

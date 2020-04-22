@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.*;
 
-public class GeneralGetTag {
+public class GeneralGetTag implements ResponseApi {
 
     @JsonProperty
     ArrayList <Map> tags = new ArrayList<Map>();

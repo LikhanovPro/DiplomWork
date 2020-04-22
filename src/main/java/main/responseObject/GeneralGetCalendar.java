@@ -3,7 +3,7 @@ package main.responseObject;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.*;
 
-public class GeneralGetCalendar {
+public class GeneralGetCalendar implements ResponseApi {
 
     @JsonProperty
     Set<Integer> years = new TreeSet<>();

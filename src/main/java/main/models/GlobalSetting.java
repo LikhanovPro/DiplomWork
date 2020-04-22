@@ -1,6 +1,5 @@
 package main.models;
 
-
 import javax.persistence.*;
 
 @Entity
@@ -18,7 +17,6 @@ public class GlobalSetting {
 
     @Column (nullable = false)
     private boolean value;
-
 
     //========================================================================================
     public int getId() {

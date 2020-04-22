@@ -1,6 +1,5 @@
 package main.models;
 
-
 import javax.persistence.*;
 import java.util.Date;
 
@@ -33,7 +32,6 @@ public class PostsVotes {
     private Users userForVote;
 
     //=================================================================================================
-
 
     public int getId() {
         return id;

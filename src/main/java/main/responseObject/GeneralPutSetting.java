@@ -2,8 +2,7 @@ package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class GeneralPutSetting {
-
+public class GeneralPutSetting implements ResponseApi {
 
     @JsonProperty
     boolean MULTIUSER_MODE;

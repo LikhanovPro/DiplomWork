@@ -2,7 +2,6 @@ package main.requestObject;
 import java.util.ArrayList;
 
 public class PostPutPostByIdObject {
-
     private String time;
     private boolean active;
     private String title;

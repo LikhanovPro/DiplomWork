@@ -2,7 +2,7 @@ package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class GeneralPostMyProfile {
+public class GeneralPostMyProfile implements ResponseApi {
 
     @JsonProperty
     boolean result;

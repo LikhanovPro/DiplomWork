@@ -4,10 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AuthGetCheck {
+public class AuthGetCheck implements ResponseApi {
 
     @JsonProperty
     boolean result;
+
     @JsonProperty
     Map<Object, Object> user = new HashMap<>();
 

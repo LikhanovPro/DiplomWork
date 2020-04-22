@@ -1,9 +1,7 @@
 package main.requestObject;
 
 public class AuthPostLogInObject {
-
     String e_mail;
-
     String password;
 
     public String getE_mail() {

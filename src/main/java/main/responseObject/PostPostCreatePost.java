@@ -4,15 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PostPostCreatePost {
-
+public class PostPostCreatePost implements ResponseApi {
 
     @JsonProperty
     boolean result;
 
     @JsonProperty
     Map <String, String> errors = new HashMap<>();
-
 
     public boolean isResult() {
         return result;

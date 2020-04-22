@@ -4,13 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class PostGetPostsForModeration {
+public class PostGetPostsForModeration implements ResponseApi {
 
     @JsonProperty
     int count;
 
     @JsonProperty
-    ArrayList <Map> posts = new ArrayList<>();
+    ArrayList<Map<Object, Object>> posts = new ArrayList<>();
 
     public int getCount() {
         return count;
@@ -20,11 +20,11 @@ public class PostGetPostsForModeration {
         this.count = count;
     }
 
-    public ArrayList<Map> getPosts() {
+    public ArrayList<Map<Object, Object>> getPosts() {
         return posts;
     }
 
-    public void setPosts(ArrayList<Map> posts) {
+    public void setPosts(ArrayList<Map<Object, Object>> posts) {
         this.posts = posts;
     }
 }

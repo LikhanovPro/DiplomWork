@@ -2,7 +2,7 @@ package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class GeneralPostModeration {
+public class GeneralPostModeration implements ResponseApi {
 
     @JsonProperty
     boolean result;

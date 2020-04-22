@@ -2,3 +2,44 @@ spring.datasource.url: jdbc:mysql://localhost:3306/diplomwork
 spring.datasource.username: root
 spring.datasource.password: testtest
 spring.jpa.hibernate.ddl-auto: none
+
+diplomawork.titleLength: 3
+diplomawork.textLength: 10
+diplomawork.commentsLength: 2
+diplomawork.lifeTime: 1
+diplomawork.codeLength: 6
+diplomawork.pathToImages: src/main/resources/static/images/
+diploma.maxLevelOfDirectoryToImage: 3
+diplomawork.pathToAvatars: src/main/resources/static/img/avatars/
+diplomawork.pathToDefaultAvatar: src/main/resources/static/img/avatars/default.jpg
+diplomawork.announceLength: 100
+diplomawork.supportMail: DiplomWorkSup@gmail.com
+diplomawork.supportMailPassword: 123DiplomWork
+diplomawork.iformationaboutsite.title: DevPub
+diplomawork.iformationaboutsite.subtitle: Рассказы разработчиков
+diplomawork.iformationaboutsite.phone: +7 903 666-44-55
+diplomawork.iformationaboutsite.email: mail@mail.ru
+diplomawork.iformationaboutsite.copyright: Дмитрий Сергеевич
+diplomawork.iformationaboutsite.copyrightFrom: 2005
+diploma.captcha.scale: 2
+diploma.captcha.captchaCodeLength: 4
+diploma.captcha.secretCodeLength: 22
+diploma.captcha.restoreCodeLength: 27
+diploma.restorepassword.link: http://localhost:8080/login/change-password/
+diploma.restorepassword.host: smtp.gmail.com
+diploma.restorepassword.port: 465
+diploma.restorepassword.socketfactoryclass: javax.net.ssl.SSLSocketFactory
+diploma.restorepassword.auth: true
+diploma.dateformat.post: yyyy-MM-dd HH:mm
+diploma.dateformat.calendar: yyyy-MM-dd
+diploma.dateformat.year: yyyy
+diploma.db.idStatisticsIsPublic: 3
+diploma.db.idPostPreModeration: 2
+diploma.db.idMultiUserMode: 1
+
+
+
+
+
+
+

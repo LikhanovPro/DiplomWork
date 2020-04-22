@@ -17,7 +17,6 @@ public class Tag2Post {
     private int tagId;
 
     //=============================================================================================
-
     public int getId() {
         return id;
     }

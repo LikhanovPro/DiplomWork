@@ -1,21 +1,15 @@
 package main.controller;
 
-import jdk.jfr.ContentType;
 import main.requestObject.GeneralPostMProfileObject;
 import main.requestObject.GeneralPostModerationObject;
 import main.service.GeneralService;
-import main.service.ResponseApi;
+import main.responseObject.ResponseApi;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.mail.Multipart;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import java.io.IOException;
-import java.util.ArrayList;
 
 @RestController
 public class ApiGeneralController {
@@ -110,7 +104,6 @@ public class ApiGeneralController {
 
         return generalService.getUserAvatar(request, avatarImage);
     }
-
 }
 
 

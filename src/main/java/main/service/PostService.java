@@ -1,6 +1,5 @@
 package main.service;
 
-import main.controller.DefaultController;
 import main.models.*;
 import main.requestObject.PostPostCreatePostObject;
 import main.requestObject.PostPostDislikeObject;
@@ -8,6 +7,7 @@ import main.requestObject.PostPostLikeObject;
 import main.requestObject.PostPutPostByIdObject;
 import main.responseObject.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,7 +24,20 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
-public class PostService implements ResponseApi {
+public class PostService {
+
+    @Value("${diplomawork.titleLength}")
+    int titleLength;
+    @Value("${diplomawork.textLength}")
+    int textLength;
+    @Value("${diplomawork.pathToImages}")
+    String pathToImages;
+    @Value("${diplomawork.announceLength}")
+    int announceLength;
+    @Value("${diploma.dateformat.post}")
+    String dateFormatPost;
+    @Value("${diploma.dateformat.calendar}")
+    String dateFormatCalendar;
 
     //Подключаем репозитории
     @Autowired
@@ -45,24 +58,17 @@ public class PostService implements ResponseApi {
     private UsersRepository usersRepository;
     @Autowired
     ResourceLoader resourceLoader;
-    //==========================================
-
     @Autowired
-    WebProperties webProperties;
-
+    private SessionInformation sessionInformation;
     //==========================================
 
-
-    public ResponseEntity postList (int offset, int limit, String mode) {
+    public ResponseEntity <ResponseApi> postList (int offset, int limit, String mode) {
         PostGetPost postGetPost = new PostGetPost();
         ArrayList <Map> posts = new ArrayList<>();
-
         ArrayList<Map> allPosts = new ArrayList<>();
-
         //Выбор метода отображения списка постов
         switch (mode) {
             case ("recent"):
-                //Создаем список id постов с датами публикации
                 Map<Integer, Date> idPostsListRecently = new HashMap<>();
                 postsRepository.findAll().forEach(post -> {
                     if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")&& post.getTime().before(new Date())) {
@@ -70,13 +76,11 @@ public class PostService implements ResponseApi {
                     }
                 });
                 postGetPost.setCount(idPostsListRecently.size());// Фиксируем количество постов
-                idPostsListRecently.entrySet().stream().sorted(Map.Entry.<Integer, Date>comparingByValue().reversed())//Выполняем сортировку по датам
+                idPostsListRecently.entrySet().stream().sorted(Map.Entry.<Integer, Date>comparingByValue().reversed())//Сортировка по датам
                         .forEach(postId -> allPosts
-                                .add(getPostInformation(postId.getKey(), postsRepository)));//в порядке очереди заполняем информацию о постах
-
+                                .add(getPostInformation(postId.getKey(), postsRepository)));
                 break;
             case ("popular"):
-                //Создаем список id постов с количеством коментариев
                 Map<Integer, Integer> idPostsListPopular = new HashMap<>();
                 postsRepository.findAll().forEach(post -> {
                     if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")&& post.getTime().before(new Date())) {
@@ -84,16 +88,14 @@ public class PostService implements ResponseApi {
                     }
                 });
                 postGetPost.setCount(idPostsListPopular.size());//Фиксируем количество постов
-                idPostsListPopular.entrySet().stream().sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())//Выполняем сортировку по количеству коментариев
+                idPostsListPopular.entrySet().stream().sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())//Сортировка по количеству коментариев
                         .forEach(postId -> allPosts
-                                .add(getPostInformation(postId.getKey(), postsRepository)));//в порядке очереди заполняем информацию о постах
+                                .add(getPostInformation(postId.getKey(), postsRepository)));
                 break;
             case ("best"):
-                //Создаем список id постов с количеством лайков
                 Map<Integer, Integer> idPostsListBest = new HashMap<>();
                 postsRepository.findAll().forEach(post -> {
                     if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")&& post.getTime().before(new Date())) {
-
                         //Считаем количество лайков для постов
                         int likeCount = 0;
                         for (int i = 0; i < post.getVotesToPost().size(); i++) {
@@ -107,10 +109,9 @@ public class PostService implements ResponseApi {
                 postGetPost.setCount(idPostsListBest.size());//Фиксируем количество постов
                 idPostsListBest.entrySet().stream().sorted(Map.Entry.<Integer, Integer>comparingByValue())//Выполняем сортировку
                         .forEach(postId -> allPosts
-                                .add(getPostInformation(postId.getKey(), postsRepository)));//Заполняем в порядке очереди информацию о остах
+                                .add(getPostInformation(postId.getKey(), postsRepository)));
                 break;
             case ("early"):
-                //Создаем список id постов с датами
                 Map<Integer, Date> idPostsListEarly = new HashMap<>();
                 postsRepository.findAll().forEach(post -> {
                     if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")&& post.getTime().before(new Date())) {
@@ -120,14 +121,13 @@ public class PostService implements ResponseApi {
                 postGetPost.setCount(idPostsListEarly.size());//Фиксируем количество постов
                 idPostsListEarly.entrySet().stream().sorted(Map.Entry.<Integer, Date>comparingByValue())//Сортируем по датам
                         .forEach(postId -> allPosts
-                                .add(getPostInformation(postId.getKey(), postsRepository)));//Заполняем по очереди информацию о постах
+                                .add(getPostInformation(postId.getKey(), postsRepository)));
                 break;
             default:
                 postGetPost.setCount(0);
                 break;
         }
-
-        //Определяемся с количеством выводимого на экран
+        //Определяем количество выводимых на экран постов
         //Если больше постов больше, чем offset, то количество равно offset, если меньше, то все
         if (allPosts.size() >= (offset + limit)) {
             for (int i = offset; i < limit; i++) {
@@ -144,11 +144,10 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity postSearch (int offset, int limit, String query) {
+    public ResponseEntity <ResponseApi> postSearch (int offset, int limit, String query) {
         PostGetSearch postGetSearch = new PostGetSearch();
         ArrayList <Map> posts = new ArrayList<>();
         ArrayList<Map> allPosts = new ArrayList<>();
-
         //Проверяем, что строка поиска не пуста
         if (!query.equals(null)) {
             postsRepository.findAll().forEach(post -> {
@@ -167,10 +166,9 @@ public class PostService implements ResponseApi {
                     allPosts.add(getPostInformation(post.getId(), postsRepository));
                 }
             });
-
         }
         postGetSearch.setCount(allPosts.size());//Фиксируем количество постов
-        //Определяемся с количеством выводимого на экран
+        //Определяем количество выводимых на экран постов
         //Если больше постов больше, чем offset, то количество равно offset, если меньше, то все
         if (allPosts.size() >= (offset + limit)) {
             for (int i = offset; i < limit; i++) {
@@ -187,20 +185,16 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity postById (int id) {
+    public ResponseEntity <ResponseApi> postById (int id) {
         PostGetById postGetById = new PostGetById();
         Map <Object, Object> user = new HashMap<>();
-        ArrayList<Map> comments = new ArrayList<>();
+        ArrayList<Map <Object, Object>> comments = new ArrayList<>();
         List<String> tags = new ArrayList<>();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPost);
         if (!postsRepository.findById(id).isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Пост с данным id не найден");
         }
-        //Получаем пост по id номеру
         Posts post = postsRepository.findById(id).get();
-
-
         //Сложный запрос на соответствие поста условиям
         if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED") && post.getTime().before(new Date())) {
             postGetById.setId(post.getId());
@@ -222,7 +216,9 @@ public class PostService implements ResponseApi {
             }
             postGetById.setLikeCount(likeCounts);
             postGetById.setDislikeCount(dislikeCounts);
-
+            post.setViewCount(post.getViewCount() + 1);
+            postsRepository.save(post);
+            postGetById.setViewCount(post.getViewCount());
             post.getCommentsToPost().forEach(comment ->{
                 Map <Object, Object> userComments = new HashMap<>();
                 Map <Object, Object> commentsMap = new HashMap<>();
@@ -248,13 +244,11 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity postByDate (int offset, int limit, String date) {
+    public ResponseEntity <ResponseApi> postByDate (int offset, int limit, String date) {
         PostGetByDate postGetByDate = new PostGetByDate();
         ArrayList <Map> posts = new ArrayList<>();
-
         ArrayList<Map> allPosts = new ArrayList<>();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatCalendar); //Перенести в настройки, взять от туда
         //Проверяем все посты на соответствие условиям
         postsRepository.findAll().forEach(post -> {
             //Проверка постов указанной дате, которая была передана с frontend
@@ -263,9 +257,8 @@ public class PostService implements ResponseApi {
                 allPosts.add(getPostInformation(post.getId(), postsRepository));//Заполнение информации по посту
             }
         });
-
         postGetByDate.setCount(allPosts.size());//Фиксация количества постов
-        //Определяемся с количеством выводимого на экран
+        //Определяем количество выводимых на экран постов
         //Если больше постов больше, чем offset, то количество равно offset, если меньше, то все
         if (allPosts.size() >= (offset + limit)) {
             for (int i = offset; i < limit; i++) {
@@ -282,13 +275,10 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity postByTag (int offset, int limit, String tag) {
+    public ResponseEntity <ResponseApi> postByTag (int offset, int limit, String tag) {
         PostGetByTag postGetByTag = new PostGetByTag();
         ArrayList <Map> posts = new ArrayList<>();
-
-
         ArrayList<Map> allPosts = new ArrayList<>();
-
         //Проверяем все посты
         postsRepository.findAll().forEach(post -> {
             //Проверка условий поста
@@ -301,7 +291,7 @@ public class PostService implements ResponseApi {
             }
         });
         postGetByTag.setCount(allPosts.size());//Фиксируем количество
-        //Определяемся с количеством выводимого на экран
+        //Определяем количество выводимых на экран постов
         //Если больше постов больше, чем offset, то количество равно offset, если меньше, то все
         if (allPosts.size() >= (offset + limit)) {
             for (int i = offset; i < limit; i++) {
@@ -318,18 +308,15 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity postModeration (HttpServletRequest request, int offset, int limit, String status) {
+    public ResponseEntity <ResponseApi> postModeration (HttpServletRequest request, int offset, int limit, String status) {
         PostGetPostsForModeration postGetPostsForModeration = new PostGetPostsForModeration();
-        ArrayList <Map> posts = new ArrayList<>();
-
-        ArrayList<Map> allPosts = new ArrayList<>();
-        Integer userId = DefaultController.getIdUserLogin(request);
-
+        ArrayList <Map<Object, Object>> posts = new ArrayList<>();
+        ArrayList<Map<Object, Object>> allPosts = new ArrayList<>();
+        Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка авторизации пользователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
         //Проверка постов соответствию условий
         postsRepository.findAll().forEach(post -> {
             if (post.isActive() && post.getModerationStatus().toString().equals(status.toUpperCase()) && post.getModerationStatus().toString().equals("NEW")) {//только новые посты
@@ -341,9 +328,9 @@ public class PostService implements ResponseApi {
                 }
             }
         });
-        postGetPostsForModeration.setCount(allPosts.size());//Фиксируем количество постов
-        // Определяемся с количеством выводимого на экран
-        // Если больше постов больше, чем offset, то количество равно offset, если меньше, то все
+        postGetPostsForModeration.setCount(allPosts.size());
+        //Определяем количество выводимых на экран постов
+        //Если больше постов больше, чем offset, то количество равно offset, если меньше, то все
         if (allPosts.size() >= (offset + limit)) {
             for (int i = offset; i < limit; i++) {
                 posts.add(allPosts.get(i));
@@ -359,19 +346,16 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity myPosts (HttpServletRequest request, int offset, int limit, String status) {
+    public ResponseEntity <ResponseApi> myPosts (HttpServletRequest request, int offset, int limit, String status) {
         PostGetMyPosts postGetMyPosts = new PostGetMyPosts();
-        ArrayList <Map> posts = new ArrayList<>();
-
-        ArrayList<Map> allPosts = new ArrayList<>();
-        Integer userId = DefaultController.getIdUserLogin(request);
-
+        ArrayList <Map<Object, Object>> posts = new ArrayList<>();
+        ArrayList<Map<Object, Object>> allPosts = new ArrayList<>();
+        Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка авторизации пользователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
-        //Выбчбор статуса постов
+        //Выбор статуса постов
         switch (status) {
             case ("inactive") :
                 postsRepository.findAll().forEach(post -> {
@@ -402,8 +386,8 @@ public class PostService implements ResponseApi {
                 });
                 break;
         }
-        postGetMyPosts.setCount(allPosts.size());//Фиксируем количество
-        //Определяемся с количеством выводимого на экран
+        postGetMyPosts.setCount(allPosts.size());
+        //Определяем количество выводимых на экран постов
         //Если больше постов больше, чем offset, то количество равно offset, если меньше, то все
         if (allPosts.size() >= (offset + limit)) {
             for (int i = offset; i < limit; i++) {
@@ -420,17 +404,12 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity createPost (HttpServletRequest request, PostPostCreatePostObject information) throws ParseException {
+    public ResponseEntity <ResponseApi> createPost (HttpServletRequest request, PostPostCreatePostObject information) throws ParseException {
         PostPostCreatePost postPostCreatePost = new PostPostCreatePost();
         Map <String, String> errors = new HashMap<>();
-        int titleLength = webProperties.getTitleLength(); //Минимальное количество знаков заголовка
-        int textLength = webProperties.getTextLength(); //Минлнимальное количество знаков текста поста
-
-
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        Integer userId = DefaultController.getIdUserLogin(request);
-        Date time = dateFormat.parse((information.getTime()).replaceAll("T", " "));//Дата передается со знаком "Т" ммежду датой и временем,убираю вручную
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPost);
+        Integer userId = sessionInformation.getIdUserLogin(request);
+        Date time = dateFormat.parse((information.getTime()).replaceAll("T", " "));//Дата передается со знаком "Т" между датой и временем,убираю вручную
         boolean active;
         if (information.getActive() == 1) {
             active = true;
@@ -441,22 +420,16 @@ public class PostService implements ResponseApi {
         String title = information.getTitle();
         String text = information.getText();
         ArrayList<String> tags = information.getTags();
-
         //Проверка авторизации пользователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
-        //Проверка соответствия даты реаьлности, не может быть будущее
+        //Проверка соответствия даты, не может быть будущее
         if (time.before(new Date())){
             time = new Date();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Задано прошедшее время.");
         }
-
         //Проверка соотвествия количества знаков заголовка и текста
         if (title.length() < titleLength) {
-            System.out.println(title.length());
-            System.out.println(titleLength);
             errors.put("title", "Заголовок не установлен или слишком короткий");
             postPostCreatePost.setErrors(errors);
             postPostCreatePost.setResult(false);
@@ -479,8 +452,6 @@ public class PostService implements ResponseApi {
                 post.setUserId(userId);
                 post.setViewCount(0);
                 int postId = postsRepository.save(post).getId();
-
-                //Поиск тегов, сохранение и получение их Id - при отладке вынести во внешний метод
                 Map<String, Integer> tagsNames = new HashMap<>();
                 for (Tags tag : tagsRepository.findAll()) {
                     tagsNames.put(tag.getName(), tag.getId());
@@ -509,27 +480,21 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity putPostById (HttpServletRequest request, PostPutPostByIdObject information) throws ParseException {
+    public ResponseEntity <ResponseApi> putPostById (HttpServletRequest request, PostPutPostByIdObject information) throws ParseException {
         PostPutPostById postPutPostById = new PostPutPostById();
         Map<String, String> errors = new HashMap<>();
-        int titleLength = webProperties.getTitleLength(); //Минимальное количество знаков заголовка
-        int textLength = webProperties.getTextLength(); //Минлнимальное количество знаков текста поста
-
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        Integer userId = DefaultController.getIdUserLogin(request);
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPost); //Перенести в астройки, взять от туда
+        Integer userId = sessionInformation.getIdUserLogin(request);
         Date time = dateFormat.parse((information.getTime()).replaceAll("T", " "));//Дата передается со знаком "Т" ммежду датой и временем,убираю вручную
         boolean active = information.isActive();
         String title = information.getTitle();
         String text = information.getText();
         ArrayList<String> tags = information.getTags();
-
-        userId = DefaultController.getIdUserLogin(request);
+        userId = sessionInformation.getIdUserLogin(request);
         //Проверяем авторизацию пользователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
         //Проверка соответствия условий заголовка и текста
         if (title.length() < titleLength) {
             errors.put("title", "Заголовок не установлен или слишком короткий");
@@ -542,19 +507,14 @@ public class PostService implements ResponseApi {
                 postPutPostById.setErrors(errors);
                 postPutPostById.setResult(false);
             } else {
-            /*String[] tagsList;
-            tags.replaceAll(", ", ",");
-            tagsList = tags.split(",");*/
                 //Првоерка соответствия времени
                 if (time.before(new Date())) {
                     time = new Date();
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Задано прошедшее время.");
                 }
-
                 //Получаем пост из БД по id переданному из frontend
                 Posts post = postsRepository.findById(information.getId()).get();
                 post.setActive(active);
-                //Если пользователь модератор - то устанавливаем модератора посту, если нет, ставим посту статус NEW и ждм решения модератора
+                //Если пользователь модератор - то устанавливаем модератора посту, если нет, ставим посту статус NEW и ждем решения модератора
                 if (usersRepository.findById(userId).get().isModerator()) {
                     post.setModeratorId(userId);
                 } else {
@@ -566,7 +526,6 @@ public class PostService implements ResponseApi {
                 post.setTime(time);
                 post.setTitle(title);
                 int postId = postsRepository.save(post).getId();
-
                 //Поиск тегов, сохранение и получение их Id - при отладке вынести во внешний метод
                 Map<String, Integer> tagsNames = new HashMap<>();
                 for (Tags tag : tagsRepository.findAll()) {
@@ -577,13 +536,13 @@ public class PostService implements ResponseApi {
                 for (int i = 0; i < tags.size(); i++) {
                     if (tagsNames.containsKey(tags.get(i).replaceAll(",", ""))) {
                         tagsId.add(tagsNames.get(tags.get(i)));
-                    } else {//Если тегов нет в БД, то создаем новый тег
+                    } else {
                         Tags newTag = new Tags();
                         newTag.setName(tags.get(i));
                         tagsId.add(tagsRepository.save(newTag).getId());
                     }
                 }
-                //Созжание связи между тегами и постом
+                //Создание связи между тегами и постом
                 tagsId.forEach(tagId -> {
                     Tag2Post tag2Post = new Tag2Post();
                     tag2Post.setTagId(tagId);
@@ -597,17 +556,15 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity postLike (HttpServletRequest request, PostPostLikeObject information) {
+    public ResponseEntity <ResponseApi> postLike (HttpServletRequest request, PostPostLikeObject information) {
         PostPostLike postPostLike = new PostPostLike();
-
-        Integer userId = DefaultController.getIdUserLogin(request);
+        Integer userId = sessionInformation.getIdUserLogin(request);
         Integer postId = information.getPostId();
-        //Проверка авторизации польлзователя
+        //Проверка авторизации пользователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
-        //Проверяем была ли уже оценка данного поста данным пользователем
+        //Проверка оценки поста текущим польлзователем
         for (PostsVotes vote : postsVotesRepository.findAll()) {
             if (vote.getPostId() == postId && vote.getUserId() == userId) {//оценка была
                 if (vote.isValue()) {
@@ -634,16 +591,14 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity postDislike (HttpServletRequest request, PostPostDislikeObject information) {
+    public ResponseEntity <ResponseApi> postDislike (HttpServletRequest request, PostPostDislikeObject information) {
         PostPostDislike postPostDislike = new PostPostDislike();
-
-        Integer userId = DefaultController.getIdUserLogin(request);
+        Integer userId = sessionInformation.getIdUserLogin(request);
         Integer postId = information.getPostId();
-        //Проверка авторизации польлзователя
+        //Проверка авторизации пользователя
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
-
         //Проверяем была ли уже оценка данного поста данным пользователем
         for (PostsVotes vote : postsVotesRepository.findAll()) {
             if (vote.getPostId() == postId && vote.getUserId() == userId) {
@@ -670,43 +625,36 @@ public class PostService implements ResponseApi {
         return ResponseEntity.status(HttpStatus.OK).body(postPostDislike);
     }
 //---------------------------------------------------------------------------------------------------------------------
-    public ResponseEntity<byte[]> createImage (String level1, String level2, String level3, String imageFile) throws IOException {
 
-        File file = new File(webProperties.getPathToImages() + level1 + "/" + level2 +
-                "/" + level3 + "/" + imageFile);
+    public ResponseEntity<byte[]> createImage (String imageFile) throws IOException {
+        String pathToImageParts [] = imageFile.split("-");
+        File file = new File(pathToImages + pathToImageParts[0] + File.separator + pathToImageParts[1] +
+                File.separator + pathToImageParts[2] + File.separator + pathToImageParts[3]);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         byte[] med = Files.readAllBytes(file.toPath());
-        ResponseEntity<byte[]> image = new ResponseEntity<>(med, headers, HttpStatus.OK);
-
-        return image;
+        return new ResponseEntity<>(med, headers, HttpStatus.OK);
     }
-
 //---------------------------------------------------------------------------------------------------------------------
-    //Формирование информации о посте для личного списка постов
-    private static Map <Object, Object> getMyPostInformation (Posts post) {
+    //Формирование информации о посте для списка постов
+    private Map <Object, Object> getMyPostInformation (Posts post) {
         Map<Object, Object> mapForAnswer = new HashMap<>();
         Map<Object, Object> userMap = new HashMap<>();
-        int annoncelength = 100;
-
         mapForAnswer.put("id", post.getId());
         mapForAnswer.put("time", post.getTime().toString());
         mapForAnswer.put("title", post.getTitle());
-
-        String annonce;
-        if (post.getText().length() < annoncelength) {
-            annonce = post.getText();
+        String announce;
+        if (post.getText().length() < announceLength) {
+            announce = post.getText();
         } else {
-            annonce = post.getText().substring(0, annoncelength) + "...";
+            announce = post.getText().substring(0, announceLength) + "...";
         }
-        mapForAnswer.put("announce", annonce);
-
+        mapForAnswer.put("announce", announce);
         //В описательной части API запросов задания нет требований к этой информации в ответе, но
-        // при анализе работы веб-страницы это необходимо для работы сайта
+        //при анализе работы веб-страницы это необходимо для работы сайта
         userMap.put("id", post.getUser().getId());
         userMap.put("name", post.getUser().getName());
         mapForAnswer.put("user", userMap);
-        //===================================================
         int likeCount = 0;
         int dislikeCounts = 0;
         for (int i = 0; i < post.getVotesToPost().size(); i++) {
@@ -724,46 +672,32 @@ public class PostService implements ResponseApi {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-
-
-//---------------------------------------------------------------------------------------------------------------------
-    private static Map <Object, Object> getPostInformationForModeration (Posts post) {
+    private Map <Object, Object> getPostInformationForModeration (Posts post) {
         Map <Object, Object> mapForAnswer = new HashMap<>();
         Map <Object, Object> userMap = new HashMap<>();
-        int annoncelength = 100;
-
         mapForAnswer.put("id", post.getId());
         mapForAnswer.put("time", post.getTime().toString());
-
         userMap.put("id", post.getUser().getId());
         userMap.put("name", post.getUser().getName());
         mapForAnswer.put("user", userMap);
         mapForAnswer.put("title", post.getTitle());
-
-        String annonce;
-        if (post.getText().length() < annoncelength) {
-            annonce = post.getText();
+        String announce;
+        if (post.getText().length() < announceLength) {
+            announce = post.getText();
         }
         else {
-            annonce = post.getText().substring(0, annoncelength) + "...";
+            announce = post.getText().substring(0, announceLength) + "...";
         }
-        mapForAnswer.put("announce", annonce);
-
+        mapForAnswer.put("announce", announce);
         return mapForAnswer;
     }
-
-
-
 //---------------------------------------------------------------------------------------------------------------------
 
     //Метод формирования информации о постах
-    public static Map <Object, Object> getPostInformation (Integer postId, PostsRepository postsRepository) {
-        int annoncelength = 100;//Количество знаков в анонсе
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-
+    public Map <Object, Object> getPostInformation (Integer postId, PostsRepository postsRepository) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPost); //Перенести в настройки, взять от туда
         Map <Object, Object> mapForAnswer = new HashMap<>();
         Map <Object, Object> userMap = new HashMap<>();
-
         //Заполнение информации
         mapForAnswer.put("id", postId);
         mapForAnswer.put("time", dateFormat.format(postsRepository.findById(postId).get().getTime()));
@@ -771,18 +705,15 @@ public class PostService implements ResponseApi {
         userMap.put("name", postsRepository.findById(postId).get().getUser().getName());
         mapForAnswer.put("user", userMap);
         mapForAnswer.put("title", postsRepository.findById(postId).get().getTitle());
-
-        String annonce;
+        String announce;
         //Формирование анонса
-        if (postsRepository.findById(postId).get().getText().length() < annoncelength) {//Проверка, что длина текста больше максимальной длины анонса
-            annonce = postsRepository.findById(postId).get().getText();
+        if (postsRepository.findById(postId).get().getText().length() < announceLength) {//Проверка, что длина текста больше максимальной длины анонса
+            announce = postsRepository.findById(postId).get().getText();
         }
         else {
-            annonce = postsRepository.findById(postId).get().getText().substring(0, annoncelength) + "...";//Добавление троеточия в конце анонса
+            announce = postsRepository.findById(postId).get().getText().substring(0, announceLength) + "...";//Добавление троеточия в конце анонса
         }
-
-        mapForAnswer.put("announce", annonce);
-
+        mapForAnswer.put("announce", announce);
         int likeCount = 0;
         int dislikeCounts = 0;
         //Подсчет количества лайков и дизлайков
@@ -798,10 +729,7 @@ public class PostService implements ResponseApi {
         mapForAnswer.put("dislikeCount", dislikeCounts);
         mapForAnswer.put("commentCount", postsRepository.findById(postId).get().getCommentsToPost().size());
         mapForAnswer.put("viewCount", postsRepository.findById(postId).get().getViewCount());
-
         return mapForAnswer;
     }
-
 //---------------------------------------------------------------------------------------------------------------------
-
 }

@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.Map;
 
-
-public class PostGetPost {
+public class PostGetPost implements ResponseApi {
 
     @JsonProperty
     int count;

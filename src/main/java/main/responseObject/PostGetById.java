@@ -1,10 +1,9 @@
 package main.responseObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.*;
 
-public class PostGetById {
+public class PostGetById implements ResponseApi {
 
     @JsonProperty
     int id;
@@ -28,10 +27,13 @@ public class PostGetById {
     int dislikeCount;
 
     @JsonProperty
-    ArrayList<Map> comments = new ArrayList<>();
+    ArrayList<Map <Object, Object>> comments = new ArrayList<>();
 
     @JsonProperty
     List<String> tags = new ArrayList<>();
+
+    @JsonProperty
+    int viewCount;
 
     public int getId() {
         return id;
@@ -89,11 +91,11 @@ public class PostGetById {
         this.dislikeCount = dislikeCount;
     }
 
-    public ArrayList<Map> getComments() {
+    public ArrayList<Map<Object, Object>> getComments() {
         return comments;
     }
 
-    public void setComments(ArrayList<Map> comments) {
+    public void setComments(ArrayList<Map<Object, Object>> comments) {
         this.comments = comments;
     }
 
@@ -103,5 +105,13 @@ public class PostGetById {
 
     public void setTags(List<String> tags) {
         this.tags = tags;
+    }
+
+    public int getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(int viewCount) {
+        this.viewCount = viewCount;
     }
 }

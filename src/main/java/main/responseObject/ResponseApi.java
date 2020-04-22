@@ -1,7 +1,4 @@
-package main.service;
+package main.responseObject;
 
 public interface ResponseApi {
-
-
-
 }

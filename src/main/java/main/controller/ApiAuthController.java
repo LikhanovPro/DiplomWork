@@ -4,9 +4,8 @@ import main.requestObject.AuthPostLogInObject;
 import main.requestObject.AuthPostPasswordObject;
 import main.requestObject.AuthPostRegisterObject;
 import main.requestObject.AuthPostRestoreObject;
-import main.responseObject.*;
 import main.service.AuthService;
-import main.service.ResponseApi;
+import main.responseObject.ResponseApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +19,6 @@ public class ApiAuthController extends HttpServlet {
 
     @Autowired
     AuthService authService;
-
-
 
     //Котроллер входа под своей учетной записью
     @PostMapping("/login")
@@ -44,6 +41,7 @@ public class ApiAuthController extends HttpServlet {
     //Контроллер регистрации пользователя
     @PostMapping("/register")
     public ResponseEntity<ResponseApi> createNewUser(@RequestBody AuthPostRegisterObject information) {
+
         return authService.authRegister(information);
     }
 
@@ -62,6 +60,6 @@ public class ApiAuthController extends HttpServlet {
     //Контроллер изменения пароля (password) пользователя
     @PostMapping("/password")
     public ResponseEntity<ResponseApi> createNewPassword (@RequestBody AuthPostPasswordObject information) {
-        return authService.authChagePassword(information);
+        return authService.authChangePassword(information);
     }
 }
