@@ -206,7 +206,8 @@ public class AuthService {
         BufferedImage image = cage.drawImage(sbCode.toString()); // Изначально созданный каптч
         BufferedImage result = new BufferedImage(image.getWidth()/scale, image.getHeight()/scale, image.getType()); // Заготовка под вдвое меньший масштаб
         Graphics2D graphics2D = (Graphics2D) result.getGraphics();
-        graphics2D.scale((1/scale), (1/scale));
+        double sizeScale = (double) 1/scale;
+        graphics2D.scale(sizeScale, sizeScale);
         graphics2D.drawImage(image, 0, 0, null);
         graphics2D.dispose(); // Масштабирование
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
