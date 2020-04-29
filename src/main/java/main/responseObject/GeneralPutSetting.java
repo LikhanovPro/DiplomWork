@@ -13,6 +13,12 @@ public class GeneralPutSetting implements ResponseApi {
     @JsonProperty
     boolean STATISTICS_IS_PUBLIC;
 
+    @JsonProperty
+    String message;
+
+    @JsonProperty
+    boolean result;
+
     public boolean isMULTIUSER_MODE() {
         return MULTIUSER_MODE;
     }
@@ -35,5 +41,21 @@ public class GeneralPutSetting implements ResponseApi {
 
     public void setSTATISTICS_IS_PUBLIC(boolean STATISTICS_IS_PUBLIC) {
         this.STATISTICS_IS_PUBLIC = STATISTICS_IS_PUBLIC;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public boolean isResult() {
+        return result;
+    }
+
+    public void setResult(boolean result) {
+        this.result = result;
     }
 }

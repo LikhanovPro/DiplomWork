@@ -1,5 +1,6 @@
 package main.controller;
 
+import main.requestObject.GeneralPostCommentObject;
 import main.requestObject.GeneralPostMProfileObject;
 import main.requestObject.GeneralPostModerationObject;
 import main.service.GeneralService;
@@ -38,10 +39,8 @@ public class ApiGeneralController {
     //Контроллер создания коментария к посту или к коментарию
     @PostMapping ("/api/comment")
     public ResponseEntity<ResponseApi> addComment (HttpServletRequest request,
-                              @RequestParam("parent_id") Integer parentId,
-                              @RequestParam("post_id") int postId,
-                              @RequestParam("text") String text) {
-       return generalService.addComment(request, parentId, postId, text);
+                              @RequestBody GeneralPostCommentObject information) {
+       return generalService.addComment(request, information);
     }
 
     //Контроллер модерации поста
@@ -93,13 +92,13 @@ public class ApiGeneralController {
         return generalService.generalMyProfileWithAvatar(request, photo, removePhoto, name, email, password);
     }
 
-    @GetMapping ("posts/{avatarImage}")
+    @GetMapping ("posts/avatars/{avatarImage}")
     public ResponseEntity<byte[]> getUserAvatar (HttpServletRequest request, @PathVariable String avatarImage) throws IOException {
 
         return generalService.getUserAvatar(request, avatarImage);
     }
 
-    @GetMapping ("{avatarImage}")
+    @GetMapping ("/avatars/{avatarImage}")
     public ResponseEntity<byte[]> getUserAvatarForProfile (HttpServletRequest request, @PathVariable String avatarImage) throws IOException {
 
         return generalService.getUserAvatar(request, avatarImage);

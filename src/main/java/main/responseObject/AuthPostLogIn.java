@@ -10,6 +10,9 @@ import java.util.Map;
        boolean result;
 
        @JsonProperty
+       String message;
+
+       @JsonProperty
         Map <Object, Object> user = new HashMap<>();
 
        public boolean isResult() {
@@ -26,5 +29,13 @@ import java.util.Map;
 
        public void setUser(Map<Object, Object> user) {
            this.user = user;
+       }
+
+       public String getMessage() {
+           return message;
+       }
+
+       public void setMessage(String message) {
+           this.message = message;
        }
    }

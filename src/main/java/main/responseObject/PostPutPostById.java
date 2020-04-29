@@ -10,6 +10,9 @@ public class PostPutPostById implements ResponseApi {
     boolean result;
 
     @JsonProperty
+    String message;
+
+    @JsonProperty
     Map<String, String> errors = new HashMap<>();
 
     public boolean isResult() {
@@ -26,5 +29,13 @@ public class PostPutPostById implements ResponseApi {
 
     public void setErrors(Map<String, String> errors) {
         this.errors = errors;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

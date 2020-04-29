@@ -104,16 +104,16 @@ public class ApiPostController extends HttpServlet {
     }
 
     //Контроллер возврата изображения
-    @RequestMapping(value = "/api/{imageFile}", method = RequestMethod.GET)
+    @RequestMapping(value = "image/{pathToFolder}/{imageFile}", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<byte[]> getImageAsResource(@PathVariable String imageFile) throws IOException {
-        return postService.createImage(imageFile);
+    public ResponseEntity<byte[]> getImageAsResource(@PathVariable String pathToFolder, @PathVariable String imageFile) throws IOException {
+        return postService.createImage(pathToFolder, imageFile);
     }
 
     //Контроллер возврата изображения
-    @RequestMapping(value = "/post/api/{imageFile}", method = RequestMethod.GET)
+    @RequestMapping(value = "/post/image/{pathToFolder}/{imageFile}", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<byte[]> getImageAsResourceForComments(@PathVariable String imageFile) throws IOException {
-        return postService.createImage(imageFile);
+    public ResponseEntity<byte[]> getImageAsResourceForComments(@PathVariable String pathToFolder, @PathVariable String imageFile) throws IOException {
+        return postService.createImage(pathToFolder, imageFile);
     }
 }

@@ -34,7 +34,7 @@ public class Posts {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 65535, columnDefinition = "TEXT")
     private String text;
 
     @Column(name = "view_count", nullable = false)

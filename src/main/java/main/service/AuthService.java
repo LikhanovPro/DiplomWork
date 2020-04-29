@@ -53,6 +53,10 @@ public class AuthService {
     String port;
     @Value("${diploma.restorepassword.socketfactoryclass}")
     String socketfactoryclass;
+    @Value("${diplomawork.pathToDefaultAvatar}")
+    String pathToDefaultAvatar;
+    @Value("&{diplomawork.defaultAvatar}")
+    String defaultAvatar;
     @Value("${diploma.restorepassword.auth}")
     String auth;
     final char [] ELEMENTS_FOR_CODE = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
@@ -93,7 +97,9 @@ public class AuthService {
             }
         }
         authPostLogIn.setResult(false);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authPostLogIn);
+        authPostLogIn.setMessage("Пользователь не авторизован!");
+        return ResponseEntity.status(HttpStatus.OK).body(authPostLogIn);
+        //return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authPostLogIn);
     }
 //--------------------------------------------------------------------------------------------------------------------
 
@@ -131,6 +137,7 @@ public class AuthService {
         AuthPostRegister authPostRegister = new AuthPostRegister();
         Map<Object, Object> errors = new HashMap<>();
         String eMail = information.geteMail();
+        String name = information.getName();
         String password = information.getPassword();
         String captcha = information.getCaptcha();
         String captchaSecret = information.getCaptcha_secret();
@@ -139,12 +146,16 @@ public class AuthService {
             if (user.geteMail().equals(eMail)) {
                 authPostRegister.setResult(false);
                 errors.put("email", "Этот e-mail уже зарегистрирован");
+                authPostRegister.setMessage("Пользователь с таким e-mail уже зарегистрирован");
+                return ResponseEntity.status(HttpStatus.OK).body(authPostRegister);
             }
         }
         //Проверка длины кода
         if (password.length() < codeLength) {
             errors.put("password", "Пароль короче 6-ти символов");
             authPostRegister.setResult(false);
+            authPostRegister.setMessage("Пароль короче 6-ти символов!");
+            return ResponseEntity.status(HttpStatus.OK).body(authPostRegister);
         }
         errors.put("captcha", "Ошибка генерации кода captcha");
         authPostRegister.setResult(false);
@@ -155,8 +166,7 @@ public class AuthService {
                     Users newUser = new Users();
                     newUser.seteMail(eMail);
                     newUser.setModerator(false);
-                    //В форме регистрации нет поля name, регистрация с именем равным eMail
-                    newUser.setName(eMail);
+                    newUser.setName(name);
                     newUser.setPassword(password);
                     newUser.setRegTime(new Date());
                     usersRepository.save(newUser);
@@ -166,6 +176,7 @@ public class AuthService {
                 else {
                     authPostRegister.setResult(false);
                     errors.put("captcha", "Код с картинки введен неверно");
+                    authPostRegister.setMessage("Код с картинки введен неверно!");
                 }
             }
         }
@@ -230,6 +241,7 @@ public class AuthService {
         }
         String restoreCode = code.toString(); //получаем случайно сгенерированный код восстановления пароля
         authPostRestore.setResult(false);
+        authPostRestore.setMessage("Не удалось восстановить пароль!");
         //Ищем пользователя в БД по его eMail
         for (Users user : usersRepository.findAll()) {
             if (user.geteMail().equals(eMail)) {
@@ -281,6 +293,7 @@ public class AuthService {
         if (password.length() < codeLength) {
             authPostPassword.setResult(false);
             errors.put("password", "Пароль короче 6-ти символов");
+            authPostPassword.setMessage("Пароль короче 6-ти символов");
         }
         //Проверка соответствия captcha кода
         for (CaptchaCodes captchaCodes : captchaCodesRepository.findAll()) {
@@ -288,6 +301,7 @@ public class AuthService {
                 if (!captchaCodes.getCode().equals(captcha)) {//Проверка соответствия введенного captcha, хранящемуся в БД
                     authPostPassword.setResult(false);
                     errors.put("captcha", "Код с картинки введен неверно");
+                    authPostPassword.setMessage("Код с картинки введен неверно");
                 }
             }
         }
@@ -302,6 +316,7 @@ public class AuthService {
             } else {
                 authPostPassword.setResult(false);
                 errors.put("code", "Ссылка для восстановления пароля устарела. <a href=\"/auth/restore\">Запросить ссылку снова</a>");
+                authPostPassword.setMessage("Ссылка для восстановления пароля устарела!");
             }
         }
         authPostPassword.setErrors(errors);
@@ -324,7 +339,12 @@ public class AuthService {
         }
         userInformation.put("moderationCount", moderationCount);
         userInformation.put("settings", user.isModerator());
-        userInformation.put("photo", user.getPhoto());
+        if (user.getPhoto() == null) {
+            userInformation.put("photo", defaultAvatar);
+        }
+        else {
+            userInformation.put("photo", user.getPhoto());
+        }
         return userInformation;
     }
 }

@@ -19,6 +19,12 @@ public class GeneralGetMyStatistic implements ResponseApi {
     @JsonProperty
     String firstPublication;
 
+    @JsonProperty
+    String message;
+
+    @JsonProperty
+    boolean result;
+
     public int getPostsCount() {
         return postsCount;
     }
@@ -57,5 +63,21 @@ public class GeneralGetMyStatistic implements ResponseApi {
 
     public void setFirstPublication(String firstPublication) {
         this.firstPublication = firstPublication;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public boolean isResult() {
+        return result;
+    }
+
+    public void setResult(boolean result) {
+        this.result = result;
     }
 }

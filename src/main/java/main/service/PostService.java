@@ -22,6 +22,8 @@ import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class PostService {
@@ -196,7 +198,7 @@ public class PostService {
         }
         Posts post = postsRepository.findById(id).get();
         //Сложный запрос на соответствие поста условиям
-        if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED") && post.getTime().before(new Date())) {
+        if ((post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED") && post.getTime().before(new Date())) || usersRepository.findById(post.getUserId()).get().isModerator()) {
             postGetById.setId(post.getId());
             postGetById.setTime(dateFormat.format(post.getTime()));
             user.put("id", post.getUser().getId());
@@ -315,7 +317,9 @@ public class PostService {
         Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка авторизации пользователя
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            postGetPostsForModeration.setResult(false);
+            postGetPostsForModeration.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(postGetPostsForModeration);
         }
         //Проверка постов соответствию условий
         postsRepository.findAll().forEach(post -> {
@@ -353,7 +357,9 @@ public class PostService {
         Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка авторизации пользователя
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            postGetMyPosts.setResult(false);
+            postGetMyPosts.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(postGetMyPosts);
         }
         //Выбор статуса постов
         switch (status) {
@@ -422,7 +428,9 @@ public class PostService {
         ArrayList<String> tags = information.getTags();
         //Проверка авторизации пользователя
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            postPostCreatePost.setResult(false);
+            postPostCreatePost.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(postPostCreatePost);
         }
         //Проверка соответствия даты, не может быть будущее
         if (time.before(new Date())){
@@ -433,12 +441,14 @@ public class PostService {
             errors.put("title", "Заголовок не установлен или слишком короткий");
             postPostCreatePost.setErrors(errors);
             postPostCreatePost.setResult(false);
+            postPostCreatePost.setMessage("Заголовок не установлен или слишком короткий");
         }
         else {
             if (text.length() < textLength) {
                 errors.put("text", "Текст публикации слишком короткий");
                 postPostCreatePost.setErrors(errors);
                 postPostCreatePost.setResult(false);
+                postPostCreatePost.setMessage("Текст публикации слишком короткий");
             } else {
                 Posts post = new Posts();
                 post.setActive(active);
@@ -493,19 +503,23 @@ public class PostService {
         userId = sessionInformation.getIdUserLogin(request);
         //Проверяем авторизацию пользователя
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            postPutPostById.setResult(false);
+            postPutPostById.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(postPutPostById);
         }
         //Проверка соответствия условий заголовка и текста
         if (title.length() < titleLength) {
             errors.put("title", "Заголовок не установлен или слишком короткий");
             postPutPostById.setErrors(errors);
             postPutPostById.setResult(false);
+            postPutPostById.setMessage("Заголовок не установлен или слишком короткий");
         }
         else {
             if (text.length() < textLength) {
                 errors.put("text", "Текст публикации слишком короткий");
                 postPutPostById.setErrors(errors);
                 postPutPostById.setResult(false);
+                postPutPostById.setMessage("Текст публикации слишком короткий");
             } else {
                 //Првоерка соответствия времени
                 if (time.before(new Date())) {
@@ -562,7 +576,9 @@ public class PostService {
         Integer postId = information.getPostId();
         //Проверка авторизации пользователя
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            postPostLike.setResult(false);
+            postPostLike.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(postPostLike);
         }
         //Проверка оценки поста текущим польлзователем
         for (PostsVotes vote : postsVotesRepository.findAll()) {
@@ -597,7 +613,9 @@ public class PostService {
         Integer postId = information.getPostId();
         //Проверка авторизации пользователя
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            postPostDislike.setResult(false);
+            postPostDislike.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(postPostDislike);
         }
         //Проверяем была ли уже оценка данного поста данным пользователем
         for (PostsVotes vote : postsVotesRepository.findAll()) {
@@ -626,10 +644,10 @@ public class PostService {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity<byte[]> createImage (String imageFile) throws IOException {
-        String pathToImageParts [] = imageFile.split("-");
-        File file = new File(pathToImages + pathToImageParts[0] + File.separator + pathToImageParts[1] +
-                File.separator + pathToImageParts[2] + File.separator + pathToImageParts[3]);
+    public ResponseEntity<byte[]> createImage (String pathToFolder, String imageFile) throws IOException {
+        char [] pathElements = pathToFolder.toCharArray();
+        File file = new File(pathToImages + pathElements[0] + File.separator + pathElements[1] +
+                File.separator + pathElements[2] + File.separator + imageFile);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         byte[] med = Files.readAllBytes(file.toPath());
@@ -644,10 +662,13 @@ public class PostService {
         mapForAnswer.put("time", post.getTime().toString());
         mapForAnswer.put("title", post.getTitle());
         String announce;
+        announce = post.getText();
+        Pattern pattern = Pattern.compile("<.+?>");
+        Matcher matcher = pattern.matcher(announce);
         if (post.getText().length() < announceLength) {
-            announce = post.getText();
+            announce = matcher.replaceAll(" ");
         } else {
-            announce = post.getText().substring(0, announceLength) + "...";
+            announce = matcher.replaceAll(" ").substring(0, announceLength) + "...";
         }
         mapForAnswer.put("announce", announce);
         //В описательной части API запросов задания нет требований к этой информации в ответе, но
@@ -682,11 +703,13 @@ public class PostService {
         mapForAnswer.put("user", userMap);
         mapForAnswer.put("title", post.getTitle());
         String announce;
+        announce = post.getText();
+        Pattern pattern = Pattern.compile("<.+?>");
+        Matcher matcher = pattern.matcher(announce);
         if (post.getText().length() < announceLength) {
-            announce = post.getText();
-        }
-        else {
-            announce = post.getText().substring(0, announceLength) + "...";
+            announce = matcher.replaceAll(" ");
+        } else {
+            announce = matcher.replaceAll(" ").substring(0, announceLength) + "...";
         }
         mapForAnswer.put("announce", announce);
         return mapForAnswer;
@@ -706,12 +729,13 @@ public class PostService {
         mapForAnswer.put("user", userMap);
         mapForAnswer.put("title", postsRepository.findById(postId).get().getTitle());
         String announce;
-        //Формирование анонса
-        if (postsRepository.findById(postId).get().getText().length() < announceLength) {//Проверка, что длина текста больше максимальной длины анонса
-            announce = postsRepository.findById(postId).get().getText();
-        }
-        else {
-            announce = postsRepository.findById(postId).get().getText().substring(0, announceLength) + "...";//Добавление троеточия в конце анонса
+        announce = postsRepository.findById(postId).get().getText();
+        Pattern pattern = Pattern.compile("<.+?>");
+        Matcher matcher = pattern.matcher(announce);
+        if (postsRepository.findById(postId).get().getText().length() < announceLength) {
+            announce = matcher.replaceAll(" ");
+        } else {
+            announce = matcher.replaceAll(" ").substring(0, announceLength) + "...";
         }
         mapForAnswer.put("announce", announce);
         int likeCount = 0;

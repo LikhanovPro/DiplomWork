@@ -10,6 +10,9 @@ public class AuthPostPassword implements ResponseApi {
     boolean result;
 
     @JsonProperty
+    String message;
+
+    @JsonProperty
     Map<Object, Object> errors = new HashMap<Object, Object>();
 
     public boolean isResult() {
@@ -26,5 +29,13 @@ public class AuthPostPassword implements ResponseApi {
 
     public void setErrors(Map<Object, Object> errors) {
         this.errors = errors;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

@@ -1,6 +1,7 @@
 package main.service;
 
 import main.models.*;
+import main.requestObject.GeneralPostCommentObject;
 import main.requestObject.GeneralPostMProfileObject;
 import main.requestObject.GeneralPostModerationObject;
 import main.responseObject.*;
@@ -80,6 +81,10 @@ public class GeneralService {
     String copyright = "Дмитрий Сергеевич";
     @Value("${diplomawork.iformationaboutsite.copyrightFrom}")
     String copyrightFrom = "2005";
+    @Value("${diplomawork.defaultAvatar}")
+    String defaultAvatar;
+    @Value("${diplomawork.defaultAvatarDirectory}")
+    String avatars;
     //=====================================================
 
     public ResponseEntity generalInit () {
@@ -149,7 +154,10 @@ public class GeneralService {
     }
 //---------------------------------------------------------------------------------------------------------------------
 
-    public ResponseEntity <ResponseApi> addComment (HttpServletRequest request, Integer parentId, int postId, String text) {
+    public ResponseEntity <ResponseApi> addComment (HttpServletRequest request, GeneralPostCommentObject information) {
+        Integer parentId = information.getParentId();
+        Integer postId = information.getPostId();
+        String text = information.getText();
         GeneralPostComment generalPostComment = new GeneralPostComment();
         Map<String, String> errors = new HashMap<>();
         Integer userId = sessionInformation.getIdUserLogin(request);
@@ -176,6 +184,7 @@ public class GeneralService {
         if (text.length() < commentsLength || text.isEmpty()) {
             generalPostComment.setResult(false);
             errors.put("text", "Текст комментария не задан или слишком короткий");
+            generalPostComment.setMessage("Текст комментария не задан или слишком короткий");
             generalPostComment.setErrors(errors);
         }
         //Заполняем объект коментария информацией
@@ -197,7 +206,8 @@ public class GeneralService {
         Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка авторизации
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            generalPostModeration.setMessage("Пользователь не авторизован!");
+            return ResponseEntity.status(HttpStatus.OK).body(generalPostModeration);
         }
         Integer postId = information.getPostId();
         //решение модератора к посту
@@ -218,6 +228,7 @@ public class GeneralService {
         }
         else {
             generalPostModeration.setResult(false);
+            generalPostModeration.setMessage("Пользователь не является Модератором!");
         }
         return ResponseEntity.status(HttpStatus.OK).body(generalPostModeration);
     }
@@ -236,38 +247,40 @@ public class GeneralService {
         pathToFolderWithImage.append(pathToImages);
         //Создаем путь к конечной подпапке
         StringBuilder pathToImageForResponse = new StringBuilder();
-        pathToImageForResponse.append(pathToImages);
+        pathToImageForResponse.append("image").append(File.separator);
         for (int i = 0; i < maxLevelOfDirectory; i++) {
             char pathPart = userName.charAt(random.nextInt(userName.length()));
             pathToFolderWithImage.append(pathPart);
             pathToFolderWithImage.append(File.separator);
-            pathToImageForResponse.append(pathPart).append("-");
+            pathToImageForResponse.append(pathPart);
         }
         File newFolder = new File(pathToFolderWithImage.toString());
         if (!newFolder.exists()) {
             newFolder.mkdirs();
         }
-        pathToImageForResponse.append(image.getOriginalFilename());
+        pathToImageForResponse.append(File.separator).append(image.getOriginalFilename());
         pathToImage.append(pathToFolderWithImage).append(image.getOriginalFilename());
         BufferedImage bi = null;
         //Сохраняем картинку в нашу подпапку
         try {
             bi = ImageIO.read(image.getInputStream()); //Читаю файл с картинкой
-            ImageIO.write(bi, "jpg", new File(String.valueOf(pathToImage))); //Записываю картинку в нашу подпапку с форматом png
+            ImageIO.write(bi, "jpg", new File(String.valueOf(pathToImage))); //Записываю картинку в нашу подпапку с форматом jpg
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return pathToImageForResponse.toString().replaceAll(pathToImages, "api/");
+        return pathToImageForResponse.toString();
     }
 //---------------------------------------------------------------------------------------------------------------------
 
     public ResponseEntity <ResponseApi> generalMyStatistic (HttpServletRequest request) {
         GeneralGetMyStatistic generalGetMyStatistic = new GeneralGetMyStatistic();
-        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPost); //Перенести в настройки, взять от туда
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPost);
         Integer userId = sessionInformation.getIdUserLogin(request);//Получаем id пользователя
         //Проверяем, что пользователь авторизован
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            generalGetMyStatistic.setMessage("Пользователь не авторизован");
+            generalGetMyStatistic.setResult(false);
+            return ResponseEntity.status(HttpStatus.OK).body(generalGetMyStatistic);
         }
         //Ищем пользователя в БД
         Users user = usersRepository.findById(userId).get();
@@ -307,7 +320,9 @@ public class GeneralService {
         userId = sessionInformation.getIdUserLogin(request);
         //Проверка выполнения условий вывода информации по сайту
         if (!globalSettingRepository.findById(idStatisticsIsPublic).get().getValue() && userId.equals(null)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            generalGetAllStatistic.setResult(false);
+            generalGetAllStatistic.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(generalGetAllStatistic);
         }
         else {
             List<Posts> posts = new ArrayList<>();
@@ -355,7 +370,9 @@ public class GeneralService {
             }
         }
         else {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            generalGetSetting.setResult(false);
+            generalGetSetting.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(generalGetSetting);
         }
         return ResponseEntity.status(HttpStatus.OK).body(generalGetSetting);
     }
@@ -373,7 +390,8 @@ public class GeneralService {
             }
         }
         else {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            generalPutSetting.setResult(false);
+            generalPutSetting.setMessage("Пользователь не авторизован");
         }
        return ResponseEntity.status(HttpStatus.OK).body(generalPutSetting);
     }
@@ -381,10 +399,12 @@ public class GeneralService {
 
     public ResponseEntity <ResponseApi> generalMyProfileWithoutAvatar (HttpServletRequest request, GeneralPostMProfileObject information) {
         GeneralPostMyProfile generalPostMyProfile = new GeneralPostMyProfile();
-        Integer userId = sessionInformation.getIdUserLogin(request);//Убрать зависимость с контроллером
+        Integer userId = sessionInformation.getIdUserLogin(request);
         //Проверка авторизации пользователя
         if (userId == null){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            generalPostMyProfile.setResult(false);
+            generalPostMyProfile.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(generalPostMyProfile);
         }
         else {
             //Сохранение изменений профиля без аватарки
@@ -415,9 +435,11 @@ public class GeneralService {
     public ResponseEntity <ResponseApi> generalMyProfileWithAvatar (HttpServletRequest request, MultipartFile avatarFile, String removePhoto,
                                                       String name, String email, String password) {
         GeneralPostMyProfile generalPostMyProfile = new GeneralPostMyProfile();
-        Integer userId = sessionInformation.getIdUserLogin(request);//Убрать взаимосвязь с контроллером
+        Integer userId = sessionInformation.getIdUserLogin(request);
         if (userId == null){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
+            generalPostMyProfile.setResult(false);
+            generalPostMyProfile.setMessage("Пользователь не авторизован");
+            return ResponseEntity.status(HttpStatus.OK).body(generalPostMyProfile);
         }
         else {
             Users user = usersRepository.findById(userId).get();
@@ -426,7 +448,10 @@ public class GeneralService {
                 user.setPhoto(null);
             }
             else {
-                user.setPhoto(avatarFile.getOriginalFilename());
+                StringBuilder pathToAvatarForUser = new StringBuilder();
+
+                pathToAvatarForUser.append(avatars).append(File.separator).append(avatarFile.getOriginalFilename());
+                user.setPhoto(pathToAvatarForUser.toString());
                 //Копируем аватарку в БД
                 StringBuilder pathToFolderWithImage = new StringBuilder();
                 StringBuilder pathToImage = new StringBuilder();
@@ -469,11 +494,12 @@ public class GeneralService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не авторизован");
         }
         File file;
-        if (!avatarImage.equals("null")){
-            file = new File(pathToAvatars + userId + File.separator + avatarImage);
+        if (avatarImage.equals("null") || avatarImage.equals(defaultAvatar)){
+
+            file = new File(pathToDefaultAvatar);
         }
         else {
-            file = new File(pathToDefaultAvatar);
+            file = new File(pathToAvatars + userId + File.separator + avatarImage);
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);

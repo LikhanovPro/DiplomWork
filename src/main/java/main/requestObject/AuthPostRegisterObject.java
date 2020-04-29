@@ -13,6 +13,8 @@ public class AuthPostRegisterObject {
 
     String captcha_secret;
 
+    String name;
+
     public String geteMail() {
         return eMail;
     }
@@ -43,5 +45,13 @@ public class AuthPostRegisterObject {
 
     public void setCaptcha_secret(String captcha_secret) {
         this.captcha_secret = captcha_secret;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

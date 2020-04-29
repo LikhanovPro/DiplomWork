@@ -12,6 +12,9 @@ public class AuthPostRegister implements ResponseApi {
     @JsonProperty
     Map<Object, Object> errors = new HashMap<>();
 
+    @JsonProperty
+    String message;
+
     public boolean isResult() {
         return result;
     }
@@ -26,5 +29,13 @@ public class AuthPostRegister implements ResponseApi {
 
     public void setErrors(Map<Object, Object> errors) {
         this.errors = errors;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

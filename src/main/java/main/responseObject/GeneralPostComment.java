@@ -13,6 +13,9 @@ public class GeneralPostComment implements ResponseApi {
     int id;
 
     @JsonProperty
+    String message;
+
+    @JsonProperty
     Map<String, String> errors = new HashMap<>();
 
     public boolean isResult() {
@@ -37,5 +40,13 @@ public class GeneralPostComment implements ResponseApi {
 
     public void setErrors(Map<String, String> errors) {
         this.errors = errors;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }
