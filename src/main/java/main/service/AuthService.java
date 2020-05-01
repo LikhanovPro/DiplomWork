@@ -23,6 +23,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -55,8 +56,10 @@ public class AuthService {
     String socketfactoryclass;
     @Value("${diplomawork.pathToDefaultAvatar}")
     String pathToDefaultAvatar;
-    @Value("&{diplomawork.defaultAvatar}")
+    @Value("${diplomawork.defaultAvatar}")
     String defaultAvatar;
+    @Value("${diplomawork.defaultAvatarDirectory}")
+    String avatar;
     @Value("${diploma.restorepassword.auth}")
     String auth;
     final char [] ELEMENTS_FOR_CODE = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
@@ -169,6 +172,7 @@ public class AuthService {
                     newUser.setName(name);
                     newUser.setPassword(password);
                     newUser.setRegTime(new Date());
+                    newUser.setPhoto(avatar + File.separator + defaultAvatar);
                     usersRepository.save(newUser);
                     authPostRegister.setResult(true);
                     errors.clear();
@@ -340,7 +344,7 @@ public class AuthService {
         userInformation.put("moderationCount", moderationCount);
         userInformation.put("settings", user.isModerator());
         if (user.getPhoto() == null) {
-            userInformation.put("photo", defaultAvatar);
+            userInformation.put("photo", avatar + File.separator + defaultAvatar);
         }
         else {
             userInformation.put("photo", user.getPhoto());

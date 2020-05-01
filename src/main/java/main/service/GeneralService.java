@@ -444,12 +444,12 @@ public class GeneralService {
         else {
             Users user = usersRepository.findById(userId).get();
             boolean needRemovePhoto = Boolean.parseBoolean(removePhoto);
+            StringBuilder pathToAvatarForUser = new StringBuilder();
             if (needRemovePhoto) {//Проверка необходимости удалить фотографию
-                user.setPhoto(null);
+                pathToAvatarForUser.append(avatars).append(File.separator).append(defaultAvatar);
+                user.setPhoto(pathToAvatarForUser.toString());
             }
             else {
-                StringBuilder pathToAvatarForUser = new StringBuilder();
-
                 pathToAvatarForUser.append(avatars).append(File.separator).append(avatarFile.getOriginalFilename());
                 user.setPhoto(pathToAvatarForUser.toString());
                 //Копируем аватарку в БД
@@ -495,7 +495,6 @@ public class GeneralService {
         }
         File file;
         if (avatarImage.equals("null") || avatarImage.equals(defaultAvatar)){
-
             file = new File(pathToDefaultAvatar);
         }
         else {
