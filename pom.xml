@@ -20,6 +20,7 @@
         <project.reporting.outpuEncoding>UTF-8</project.reporting.outpuEncoding>
     </properties>
 
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

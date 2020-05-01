@@ -65,6 +65,20 @@ public class PostService {
     //==========================================
 
     public ResponseEntity <ResponseApi> postList (int offset, int limit, String mode) {
+        //---------------------------------------------------------------------------
+        //Тестирование JPQL
+
+        /*System.out.println("Начало теста");
+        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("PersistenceFile");
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        Query query = entityManager.createQuery("Select e.moderationStatus from Posts e");
+        List <ModeratorStatus> list = query.getResultList();
+
+        //list.forEach(id -> System.out.println(id));
+        System.out.println("Конец теста");*/
+
+        //----------------------------------------------------------------------------
+
         PostGetPost postGetPost = new PostGetPost();
         ArrayList <Map> posts = new ArrayList<>();
         ArrayList<Map> allPosts = new ArrayList<>();
