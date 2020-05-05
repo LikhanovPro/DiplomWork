@@ -1,4 +1,4 @@
-spring.datasource.url: jdbc:${CLEARDB_DATABASE_URL:mysql://localhost:3306/diplomwork}
+spring.datasource.url: jdbc:${CLEARDB_TEAL_URL:mysql://localhost:3306/diplomwork}
 spring.datasource.username: root
 spring.datasource.password: testtest
 spring.jpa.hibernate.ddl-auto: none
