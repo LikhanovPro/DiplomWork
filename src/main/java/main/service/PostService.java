@@ -65,19 +65,10 @@ public class PostService {
     //==========================================
 
     public ResponseEntity <ResponseApi> postList (int offset, int limit, String mode) {
-        //---------------------------------------------------------------------------
-        //Тестирование JPQL
-
-        /*System.out.println("Начало теста");
-        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("PersistenceFile");
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        Query query = entityManager.createQuery("Select e.moderationStatus from Posts e");
-        List <ModeratorStatus> list = query.getResultList();
-
-        //list.forEach(id -> System.out.println(id));
-        System.out.println("Конец теста");*/
-
-        //----------------------------------------------------------------------------
+        ArrayList <Posts> postRepository = new ArrayList<>();
+        postsRepository.findAll().forEach(posts -> {
+            postRepository.add(posts);
+        });
 
         PostGetPost postGetPost = new PostGetPost();
         ArrayList <Map> posts = new ArrayList<>();
@@ -86,7 +77,7 @@ public class PostService {
         switch (mode) {
             case ("recent"):
                 Map<Integer, Date> idPostsListRecently = new HashMap<>();
-                postsRepository.findAll().forEach(post -> {
+                postRepository.forEach(post -> {
                     if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")&& post.getTime().before(new Date())) {
                         idPostsListRecently.put(post.getId(), post.getTime());
                     }
@@ -94,7 +85,7 @@ public class PostService {
                 postGetPost.setCount(idPostsListRecently.size());// Фиксируем количество постов
                 idPostsListRecently.entrySet().stream().sorted(Map.Entry.<Integer, Date>comparingByValue().reversed())//Сортировка по датам
                         .forEach(postId -> allPosts
-                                .add(getPostInformation(postId.getKey(), postsRepository)));
+                                .add(getPostInformation(postId.getKey(), postRepository)));
                 break;
             case ("popular"):
                 Map<Integer, Integer> idPostsListPopular = new HashMap<>();
@@ -106,7 +97,7 @@ public class PostService {
                 postGetPost.setCount(idPostsListPopular.size());//Фиксируем количество постов
                 idPostsListPopular.entrySet().stream().sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())//Сортировка по количеству коментариев
                         .forEach(postId -> allPosts
-                                .add(getPostInformation(postId.getKey(), postsRepository)));
+                                .add(getPostInformation(postId.getKey(), postRepository)));
                 break;
             case ("best"):
                 Map<Integer, Integer> idPostsListBest = new HashMap<>();
@@ -125,7 +116,7 @@ public class PostService {
                 postGetPost.setCount(idPostsListBest.size());//Фиксируем количество постов
                 idPostsListBest.entrySet().stream().sorted(Map.Entry.<Integer, Integer>comparingByValue())//Выполняем сортировку
                         .forEach(postId -> allPosts
-                                .add(getPostInformation(postId.getKey(), postsRepository)));
+                                .add(getPostInformation(postId.getKey(), postRepository)));
                 break;
             case ("early"):
                 Map<Integer, Date> idPostsListEarly = new HashMap<>();
@@ -137,7 +128,7 @@ public class PostService {
                 postGetPost.setCount(idPostsListEarly.size());//Фиксируем количество постов
                 idPostsListEarly.entrySet().stream().sorted(Map.Entry.<Integer, Date>comparingByValue())//Сортируем по датам
                         .forEach(postId -> allPosts
-                                .add(getPostInformation(postId.getKey(), postsRepository)));
+                                .add(getPostInformation(postId.getKey(), postRepository)));
                 break;
             default:
                 postGetPost.setCount(0);
@@ -161,25 +152,30 @@ public class PostService {
 //---------------------------------------------------------------------------------------------------------------------
 
     public ResponseEntity <ResponseApi> postSearch (int offset, int limit, String query) {
+        ArrayList <Posts> postRepository = new ArrayList<>();
+        postsRepository.findAll().forEach(posts -> {
+            postRepository.add(posts);
+        });
+
         PostGetSearch postGetSearch = new PostGetSearch();
         ArrayList <Map> posts = new ArrayList<>();
         ArrayList<Map> allPosts = new ArrayList<>();
         //Проверяем, что строка поиска не пуста
         if (!query.equals(null)) {
-            postsRepository.findAll().forEach(post -> {
+            postRepository.forEach(post -> {
                 //Сложный поиск по условиям:
                 //1. Посты активны, и утверждены модератором
                 //2. текст из строки поиска найден в тексте или заголовке поста
                 if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")&&
                         (post.getTitle().toUpperCase().contains(query.toUpperCase())||post.getText().toUpperCase().contains(query.toUpperCase()))) {
-                    allPosts.add(getPostInformation(post.getId(), postsRepository));
+                    allPosts.add(getPostInformation(post.getId(), postRepository));
                 }
             });
         }
         else {//Если пуста, то выводим все посты
             postsRepository.findAll().forEach(post -> {
                 if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")) {
-                    allPosts.add(getPostInformation(post.getId(), postsRepository));
+                    allPosts.add(getPostInformation(post.getId(), postRepository));
                 }
             });
         }
@@ -261,16 +257,21 @@ public class PostService {
 //---------------------------------------------------------------------------------------------------------------------
 
     public ResponseEntity <ResponseApi> postByDate (int offset, int limit, String date) {
+        ArrayList <Posts> postRepository = new ArrayList<>();
+        postsRepository.findAll().forEach(posts -> {
+            postRepository.add(posts);
+        });
+
         PostGetByDate postGetByDate = new PostGetByDate();
         ArrayList <Map> posts = new ArrayList<>();
         ArrayList<Map> allPosts = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatCalendar); //Перенести в настройки, взять от туда
         //Проверяем все посты на соответствие условиям
-        postsRepository.findAll().forEach(post -> {
+        postRepository.forEach(post -> {
             //Проверка постов указанной дате, которая была передана с frontend
             if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED") &&
                     dateFormat.format(post.getTime()).equals(date)) {
-                allPosts.add(getPostInformation(post.getId(), postsRepository));//Заполнение информации по посту
+                allPosts.add(getPostInformation(post.getId(), postRepository));//Заполнение информации по посту
             }
         });
         postGetByDate.setCount(allPosts.size());//Фиксация количества постов
@@ -292,16 +293,21 @@ public class PostService {
 //---------------------------------------------------------------------------------------------------------------------
 
     public ResponseEntity <ResponseApi> postByTag (int offset, int limit, String tag) {
+        ArrayList <Posts> postRepository = new ArrayList<>();
+        postsRepository.findAll().forEach(posts -> {
+            postRepository.add(posts);
+        });
+
         PostGetByTag postGetByTag = new PostGetByTag();
         ArrayList <Map> posts = new ArrayList<>();
         ArrayList<Map> allPosts = new ArrayList<>();
         //Проверяем все посты
-        postsRepository.findAll().forEach(post -> {
+        postRepository.forEach(post -> {
             //Проверка условий поста
             if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")) {
                 post.getTagsToPost().forEach(tagToPost -> {
                     if (tagToPost.getName().equals(tag)) {//Проверка соответствия тегу
-                        allPosts.add(getPostInformation(post.getId(), postsRepository));
+                        allPosts.add(getPostInformation(post.getId(), postRepository));
                     }
                 });
             }
@@ -731,42 +737,46 @@ public class PostService {
 //---------------------------------------------------------------------------------------------------------------------
 
     //Метод формирования информации о постах
-    public Map <Object, Object> getPostInformation (Integer postId, PostsRepository postsRepository) {
+    public Map <Object, Object> getPostInformation (Integer postId, ArrayList<Posts> postRepository) {
         SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPost); //Перенести в настройки, взять от туда
         Map <Object, Object> mapForAnswer = new HashMap<>();
         Map <Object, Object> userMap = new HashMap<>();
         //Заполнение информации
-        mapForAnswer.put("id", postId);
-        mapForAnswer.put("time", dateFormat.format(postsRepository.findById(postId).get().getTime()));
-        userMap.put("id", postsRepository.findById(postId).get().getUser().getId());
-        userMap.put("name", postsRepository.findById(postId).get().getUser().getName());
-        mapForAnswer.put("user", userMap);
-        mapForAnswer.put("title", postsRepository.findById(postId).get().getTitle());
-        String announce;
-        announce = postsRepository.findById(postId).get().getText();
-        Pattern pattern = Pattern.compile("<.+?>");
-        Matcher matcher = pattern.matcher(announce);
-        if (postsRepository.findById(postId).get().getText().length() < announceLength) {
-            announce = matcher.replaceAll(" ");
-        } else {
-            announce = matcher.replaceAll(" ").substring(0, announceLength) + "...";
-        }
-        mapForAnswer.put("announce", announce);
-        int likeCount = 0;
-        int dislikeCounts = 0;
-        //Подсчет количества лайков и дизлайков
-        for (int i = 0; i < postsRepository.findById(postId).get().getVotesToPost().size(); i++) {
-            if (postsRepository.findById(postId).get().getVotesToPost().get(i).isValue()){
-                likeCount++;
+        for (Posts postNow : postRepository) {
+            if (postNow.getId() == postId) {
+                mapForAnswer.put("id", postId);
+                mapForAnswer.put("time", dateFormat.format(postNow.getTime()));
+                userMap.put("id", postNow.getUser().getId());
+                userMap.put("name", postNow.getUser().getName());
+                mapForAnswer.put("user", userMap);
+                mapForAnswer.put("title", postNow.getTitle());
+                String announce;
+                announce = postNow.getText();
+                Pattern pattern = Pattern.compile("<.+?>");
+                Matcher matcher = pattern.matcher(announce);
+                if (postsRepository.findById(postId).get().getText().length() < announceLength) {
+                    announce = matcher.replaceAll(" ");
+                } else {
+                    announce = matcher.replaceAll(" ").substring(0, announceLength) + "...";
+                }
+                mapForAnswer.put("announce", announce);
+                int likeCount = 0;
+                int dislikeCounts = 0;
+                //Подсчет количества лайков и дизлайков
+                for (int i = 0; i < postNow.getVotesToPost().size(); i++) {
+                    if (postNow.getVotesToPost().get(i).isValue()){
+                        likeCount++;
+                    }
+                    else {
+                        dislikeCounts++;
+                    }
+                }
+                mapForAnswer.put("likeCount", likeCount);
+                mapForAnswer.put("dislikeCount", dislikeCounts);
+                mapForAnswer.put("commentCount", postNow.getCommentsToPost().size());
+                mapForAnswer.put("viewCount", postNow.getViewCount());
             }
-            else {
-                dislikeCounts++;
-            }
         }
-        mapForAnswer.put("likeCount", likeCount);
-        mapForAnswer.put("dislikeCount", dislikeCounts);
-        mapForAnswer.put("commentCount", postsRepository.findById(postId).get().getCommentsToPost().size());
-        mapForAnswer.put("viewCount", postsRepository.findById(postId).get().getViewCount());
         return mapForAnswer;
     }
 //---------------------------------------------------------------------------------------------------------------------

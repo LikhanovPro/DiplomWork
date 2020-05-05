@@ -100,12 +100,15 @@ public class GeneralService {
 //---------------------------------------------------------------------------------------------------------------------
 
     public ResponseEntity <ResponseApi> generalTags () {
+        ArrayList <Tags> tagRepository = new ArrayList<>();
+        tagsRepository.findAll().forEach(tag -> tagRepository.add(tag));
+
         GeneralGetTag generalGetTag = new GeneralGetTag();
         Map<String, Integer> tagCount = new HashMap<>();
         Set<Integer> tagCounts = new TreeSet<>();
         ArrayList<Map> tags = new ArrayList<Map>();
         //Считаем количество тегов и сколько раз он встречается в постах
-        tagsRepository.findAll().forEach(tag -> {
+        tagRepository.forEach(tag -> {
             int i = 0;
             for (Posts post : tag.getPostsForTags()) {
                 if (post.isActive() && post.getModerationStatus().toString().equals("ACCEPTED")) {
@@ -115,7 +118,7 @@ public class GeneralService {
             tagCounts.add(i);
             tagCount.put(tag.getName(), i);
         });
-        tagsRepository.findAll().forEach(tag -> {
+        tagRepository.forEach(tag -> {
             Map <Object, Object> tagWeight = new HashMap<>();
             tagWeight.put("name", tag.getName());
             tagWeight.put("weight", (double) tagCount.get(tag.getName())/tagCounts.stream().max(Integer::compareTo).get());//Считаем веса тегов

@@ -102,7 +102,6 @@ public class AuthService {
         authPostLogIn.setResult(false);
         authPostLogIn.setMessage("Пользователь не авторизован!");
         return ResponseEntity.status(HttpStatus.OK).body(authPostLogIn);
-        //return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authPostLogIn);
     }
 //--------------------------------------------------------------------------------------------------------------------
 
@@ -127,9 +126,6 @@ public class AuthService {
         AuthGetLogOut authGetLogOut = new AuthGetLogOut();
         HttpSession session = request.getSession();
         // Из текущей сессии получаем id авторизованного пользователя и удаляем его из сессии
-
-
-        //Переделать, что бы не было ссылки на контроллер
         this.sessionInformation.getSessionInformation().remove(String.valueOf(session.getAttribute("name")));
         authGetLogOut.setResult(true);
         return ResponseEntity.status(HttpStatus.OK).body(authGetLogOut);
